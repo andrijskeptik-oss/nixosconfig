@@ -1,0 +1,4024 @@
+* конфигурация delux
+#+name: delux
+#+header: :tangle ~/git/nixosconfig/delux-nix/home.nix :mkdirp yes :noweb yes
+#+begin_src nix
+{ config, pkgs,  ... }:
+{
+   # информация, нужная для работы home manager
+  home.username = "andrey";
+  home.homeDirectory = "/home/andrey";
+
+  # Версия, с которой новый Home Manager должен быть совместим
+  home.stateVersion = "22.11"; # Please read the comment before changing.
+
+  # Пакеты для среды пользователя
+  home.packages = [
+
+    ##  Перенастроеные пакеты, на забудьте круглые скобки, например
+    ## (pkgs.nerdfonts.override { fonts = [ "FantasqueSansMono" ]; })
+
+    ## Скрипты для среды пользователя, например
+    ## (pkgs.writeShellScriptBin "my-hello" ''
+    ##   echo "Hello, ${config.home.username}!"
+    ## '')
+  ];
+
+  #  файлы домашнего каталога через 'home.file'.
+  home.file = {
+  <<delux-home-files>>
+  };
+
+  # Home Manager также может управлять переменными среды с помощью
+  # 'home.sessionVariables' 
+  #  ~/.nix-profile/etc/profile.d/hm-session-vars.sh или
+  #  ~/.local/state/nix/profiles/profile/etc/profile.d/hm-session-vars.sh или
+  #  /etc/profiles/per-user/andrey/etc/profile.d/hm-session-vars.sh
+    home.sessionVariables = {
+     EDITOR = "emacsclient";
+  };
+
+  
+  programs ={
+  home-manager.enable = true;
+  <<delux-home-programs>>
+  };
+}
+#+end_src 
+
+* программы
+** qutebrowser
+*** config
+;#+header: :tangle ~/.config/qutebrowser/config.py :mkdirp yes :noweb yes
+#+begin_src python :noweb yes 
+  import os
+  import shutil
+  <<qutebrowser-config>>
+#+end_src
+Разрешения
+#+begin_src python :noweb-ref qutebrowser-config
+config.set('content.cookies.accept', 'all', 'chrome-devtools://*')
+config.set('content.headers.accept_language', '', 'https://matchmaker.krunker.io/*')
+# config.set('content.headers.user_agent', 'Mozilla/5.0 ({os_info}) AppleWebKit/{webkit_version} (KHTML, like Gecko) {upstream_browser_key}/{upstream_browser_version} Safari/{webkit_version}', 'https://web.whatsapp.com/')
+config.set('content.headers.user_agent', 'Mozilla/5.0 ({os_info}; rv:90.0) Gecko/20100101 Firefox/90.0', 'https://accounts.google.com/*')
+
+config.set('content.images', True, 'chrome-devtools://*')
+config.set('content.images', True, 'devtools://*')
+config.set('content.javascript.enabled', True, 'chrome-devtools://*')
+config.set('content.javascript.enabled', True, 'devtools://*')
+config.set('content.javascript.enabled', True, 'chrome://*/*')
+config.set('content.javascript.enabled', True, 'qute://*/*')
+
+config.set('content.local_content_can_access_remote_urls', True, 'file:///home/andrey/.local/share/qutebrowser/userscripts/*')
+config.set('content.local_content_can_access_file_urls', False, 'file:///home/andrey/.local/share/qutebrowser/userscripts/*')
+
+config.set('content.notifications.enabled', False, 'https://web.telegram.org')
+config.set('content.notifications.enabled', False, 'https://www.facebook.com')
+
+#+end_src
+Алиасы
+#+begin_src python :noweb-ref qutebrowser-config
+c.aliases = {'w': 'session-save',
+             'q': 'close',
+             'qa': 'quit',
+             'wq': 'quit --save',
+             'wqa': 'quit --save',
+             'magnet':'hint -f magnet run :spawn -m aria2c "{hint-url}"',
+             }
+
+#+end_src
+Хинты и их селекторы
+#+begin_src python :noweb-ref qutebrowser-config
+c.hints.mode='number'
+c.hints.selectors = {'all':  ['a', 'area', 'textarea', 'select',
+                             'input:not([type="hidden"])',
+			     'button', 'frame', 'iframe', 'img', 'link', 'summary',
+			     '[contenteditable]:not([contenteditable="false"])', '[onclick]',
+			     '[onmousedown]', '[role="link"]', '[role="option"]',
+			     '[role="button"]', '[ng-click]', '[ngClick]',
+			     '[data-ng-click]', '[x-ng-click]', '[tabindex]'],
+
+                     'links': ['a[href]', 'area[href]', 'link[href]', '[role="link"][href]'],
+                     'images': ['img'], 'media': ['audio', 'img', 'video'],
+		     'url': ['[src]', '[href]'],
+                     'inputs': ['input[type="text"]', 'input[type="date"]',
+		            'input[type="datetime-local"]', 'input[type="email"]',
+			    'input[type="month"]', 'input[type="number"]',
+			    'input[type="password"]', 'input[type="search"]', 'input[type="tel"]'
+			    , 'input[type="time"]', 'input[type="url"]', 'input[type="week"]',
+			    'input:not([type])', '[contenteditable]:not([contenteditable="false"])',
+			    'textarea'],
+                     'tgmsg': ['div.Message'],
+                     'magnet': ['a[href^="magnet"]']
+                     }
+
+#+end_src
+Поисковики
+#+begin_src python :noweb-ref qutebrowser-config
+c.url.open_base_url = True 
+c.url.searchengines = {
+		  'DEFAULT': 'https://iask.ai/?mode=question&q={}', 
+		  'g' : 'https://www.google.com/search?q={}',
+		  'd' : 'https://duckduckgo.com/?q={}',
+		  'bi': 'https://global.bing.com/search?setmkt=en-us&setlang=en-us&q={}',
+		  'sw': 'https://swisscows.com/web?culture=ru&region=iv&query={}',
+		  'br': 'https://search.brave.com/search?q={}&source=web',
+		  #AI
+		  'ay': 'https://you.com/search?&tbm=youchat&cfr=chat&q={}',
+		  'ap': 'https://www.perplexity.ai/search?q={}',
+		  'awl': 'https://www.wolframalpha.com/input?i={}',
+                  'awp': 'https://www.webpilot.ai/search?q={}',
+                  'ams': 'https://felladrin-minisearch.hf.space/?q={}',
+                  'ais': 'https://isou.chat/search?q={}',
+                  'aia': 'https://iask.ai/?mode=question&q={}',
+                  'axd': 'https://www.xdash.ai/search?q={}',
+                  'ags': 'https://www.genspark.ai/search?query={}', # попробовать сделать умолчанием
+                  'tg': 'https://thegigabrain.com/search/{}',
+                  'aex': 'https://exa.ai/search?q={}',
+                  'adf': 'https://www.deepfind.co/{}',
+                   
+		  #IT
+		  'so':  'http://stackoverflow.com/search?q={}',
+		  'gh': 'https://github.com/search?q={}', 
+		  'io': 'https://libraries.io/search?q={}',
+		  #медиа
+		  'yt': 'https://www.youtube.com/results?search_query={}',
+		  'fl': 'https://www.flickr.com/search/?text={}',
+		  'v': 'https://vimeo.com/search?q={}',
+		  #вики
+		  'we': 'https://en.wikipedia.org/wiki/{}',
+		  'wu': 'https://uk.wikipedia.org/wiki/{}',
+		  'wr': 'https://ru.wikipedia.org/wiki/{}',
+		  'wa': 'https://wiki.archlinux.org/index.php?title=Special:Search&search={}',
+		  #файлы
+		  'rt': 'https://global.bing.com/search?setmkt=en-us&setlang=en-us&q=!site:rutracker.org {}', 
+		  'lg': 'http://libgen.is/search.php?view=simple&res=25&phrase=1&column=def&page=1&req={}', 
+		  #social
+		  'bl': 'http://www.blogsearchengine.org/search.html?q={}',
+		  'ss': 'https://www.social-searcher.com/social-buzz/?q5={}',
+		  #переводчики и словари
+		  'gt': 'https://translate.google.com/#view=home&op=translate&sl=auto&tl=ru&text={}'
+		  }
+
+#+end_src
+Разные настройки
+#+begin_src python :noweb-ref qutebrowser-config
+
+c.auto_save.session = True
+
+c.zoom.default = "175%"
+
+c.colors.webpage.darkmode.algorithm = 'lightness-cielab'
+c.colors.webpage.darkmode.enabled = False
+c.colors.webpage.darkmode.policy.page = 'smart'
+c.colors.webpage.preferred_color_scheme = 'auto'
+
+c.completion.open_categories = ['searchengines',  'history', 'filesystem']
+
+c.content.default_encoding = 'utf-8'
+c.content.pdfjs = False
+c.content.plugins = True
+
+c.downloads.location.directory = '' 
+c.downloads.location.remember= True 
+c.downloads.location.prompt = True 
+c.downloads.location.suggestion = 'both'
+c.downloads.position = 'bottom'
+
+c.editor.command = ['emacs', '+{line}', '{file}']
+
+c.spellcheck.languages = ['en-US','ru-RU','uk-UA']
+
+c.tabs.mousewheel_switching = False
+
+# c.url.default_page = '/home/andrey/tiddlywiki/notes.html'
+# c.url.start_pages = ['/home/andrey/tiddlywiki/notes.html']
+
+c.window.title_format = '{perc}{current_title}'
+c.fileselect.folder.command=['bash','-c','kitty ranger --chooser-file {}' ]
+c.fileselect.single_file.command=['bash','-c','kitty yazi --chooser-file {} /home/andrey/Загрузки/' ]
+c.fileselect.multiple_files.command=['bash','-c','kitty yazi --chooser-file {} /home/andrey/Загрузки/' ]
+c.fileselect.handler='external'
+
+#+end_src
+Назначение клавиш
+Открыть uri
+#+begin_src python :noweb-ref qutebrowser-config
+d_open_url={
+'cmd-set-text -s :open -t' : ['o','щ'],
+'cmd-set-text -s :open ' : ['O','Щ'],
+# 'cmd-set-text -s :open -p' : ['wp','цз'],
+# 'cmd-set-text -s :open -b' : ['wb','ци'],
+# 'cmd-set-text -s :open -w {url}' : ['wu','цг'],
+# 'cmd-set-text -s :open -t {url}' : ['wU','цГ'],
+'cmd-set-text -s :open -t {clipboard}' : ['pp','зз'],
+'cmd-set-text -s :open -t {primary}' : ['pP','зЗ'],
+'cmd-set-text -s :open  {clipboard}' : ['Pp','Зз'],
+'cmd-set-text -s :open  {primary}' : ['PP','ЗЗ'],
+}
+#+end_src
+Хинты
+#+begin_src python :noweb-ref qutebrowser-config
+d_hints={
+'hint images window' : [';i','жш'],
+'hint images' : [';I','жШ'],
+'hint links fill :open -t -r {hint-url}' : [';o','жщ'],
+'hint links fill :open {hint-url}' : [';O','жЩ'],
+'hint links yank' : [';y','жн'],
+'hint links yank-primary' : [';Y','жН'],
+'hint all tab-bg' : [';b','жи'],
+'hint links download' : [';d','жв'],
+'hint all window' : ['F','жА'],
+'hint all tab-fg' : [';f','жа'],
+'hint --rapid links tab-bg' : [';r','жк'],
+'hint all hover' : [';h','жн'],
+'hint inputs' : [';t','же'],
+'hint' : ['f','а'],
+'hint inputs --first' : ['gi','пш'],
+ }
+#+end_src
+Вкладки
+#+begin_src python :noweb-ref qutebrowser-config
+d_tabs={
+'tab-focus 1' : ['<Alt-1>',''],
+'tab-focus 2' : ['<Alt-2>',''],
+'tab-focus 3' : ['<Alt-3>',''],
+'tab-focus 4' : ['<Alt-4>',''],
+'tab-focus 5' : ['<Alt-5>',''],
+'tab-focus 6' : ['<Alt-6>',''],
+'tab-focus 7' : ['<Alt-7>',''],
+'tab-focus 8' : ['<Alt-8>',''],
+'tab-focus -1' : ['<Alt-9>',''],
+'tab-next' : ['t<Right>','е<Right>'],
+'tab-prev' : ['t<Left>','е<Left>'],
+'tab-focus last' : ['t ','е '],
+'tab-pin' : ['tp','ез'],
+'tab-close' : ['x','ч'],
+'tab-close -o' : ['X','Ч'],
+'cmd-set-text -sr :tab-focus' : ['tt','ее'],
+'tab-only' : ['to','ещ'],
+'tab-focus -1' : ['t$','е;'],
+'tab-focus 1' : ['t0','t^','е0','е:'],
+'tab-clone' : ['tc','ес'],
+'tab-give -p' : ['tg','еп'],
+'cmd-set-text -s :tab-take' : ['tw','ец'],
+
+'tab-move' : ['tm','еь'],
+'tab-mute' : ['ts','еі'],
+}
+#+end_src
+Окна
+#+begin_src python :noweb-ref qutebrowser-config
+#d_windows={
+#'open -w' : ['<Ctrl-N>',''],
+#}
+#+end_src
+Закладки
+#+begin_src python :noweb-ref qutebrowser-config
+d_bookmarks={
+'home' : ['~'],
+'cmd-set-text -s :quickmark-load -t' : ['b','и'],
+'cmd-set-text -s :quickmark-load ' : ['B','И'],
+'cmd-set-text -s :bookmark-load -t' : ['gb','пи'],
+'cmd-set-text -s :bookmark-load ' : ['gB','пИ'],
+'quickmark-save' : ['m','ь'],
+'bookmark-add' : ['M','Ь'],
+'bookmark-list -t' : ['gq','пй'],
+}
+#+end_src
+История, навигация по url
+#+begin_src python :noweb-ref qutebrowser-config
+d_history={
+'navigate decrement' : ['gu+','пг+'],
+'navigate increment' : ['gu-','пг_'],
+'back' : ['h<left>','р<left>'],
+'forward' : ['h<Right>','р<Right>'],
+'navigate prev' : ['[[','хх'],
+'navigate next' : [']]','її'],
+'navigate prev -t' : ['{{','ХХ'],
+'navigate next -t' : ['}}','ЇЇ'],
+'history -t' : ['hh','рр'],
+'navigate up' : ['gu<Up>','пг<Up>'],
+'back -w' : ['ht<Left>','ре<Left>'],
+'scroll-to-perc 0' : ['gg','пп'],
+'navigate up -w' : ['gU<Up>','пГ<Up>'],
+'forward -w' : ['hw<Right>','рц<Right>'],
+'scroll-to-perc' : ['G','П'],
+}
+#+end_src
+Изменение масштаба
+#+begin_src python :noweb-ref qutebrowser-config
+d_zoom={
+'zoom-in' : ['+',''],
+'zoom-out' : ['-',''],
+'zoom' : ['=',''],
+}
+#+end_src
+Буфер обмена
+#+begin_src python :noweb-ref qutebrowser-config
+d_clipboard={
+'yank domain' : ['yd','нв'],
+'yank domain -s' : ['Yd','Нв'],
+'yank inline [{title}]({url})' : ['ym','нь'],
+'yank inline [{title}]({url}) -s' : ['Ym','Нь'],
+'yank inline [[{url}][{title}]]' : ['yo','нщ'],
+'yank inline [[{url}][{title}]] -s' : ['Yo','Нщ'],
+'yank pretty-url' : ['yp','нз'],
+'yank pretty-url -s' : ['Yp','Нз'],
+'yank title' : ['yt','не'],
+'yank title -s' : ['Yt','Не'],
+'yank' : ['yy','нн'],
+'yank -s' : ['YY','НН'],
+}
+#+end_src
+Параметры конфигурации
+#+begin_src python :noweb-ref qutebrowser-config
+d_config={
+'cmd-set-text -s :set -t' : ['ss','іі'],
+'cmd-set-text -s :set' : ['SS','ІІ'],
+'cmd-set-text -s :bind' : ['sb','іи'],
+'cmd-set-text -s :set messages.timeout' : ['sm','іь'],
+'config-cycle -p -u *://*.{url:host}/* content.cookies.accept all no-3rdparty never ;; reload' : ['TCH','ЕСР'],
+'config-cycle -p -u *://{url:host}/* content.cookies.accept all no-3rdparty never ;; reload' : ['TCh','ЕСр'],
+'config-cycle -p -u {url} content.cookies.accept all no-3rdparty never ;; reload' : ['TCu','ЕСг'],
+'config-cycle -p -u *://*.{url:host}/* content.images ;; reload' : ['TIH','ЕШР'],
+'config-cycle -p -u *://{url:host}/* content.images ;; reload' : ['TIh','ЕШр'],
+'config-cycle -p -u {url} content.images ;; reload' : ['TIu','ЕШг'],
+'config-cycle -p -u *://*.{url:host}/* content.plugins ;; reload' : ['TPH','ЕЗР'],
+'config-cycle -p -u *://{url:host}/* content.plugins ;; reload' : ['TPh','ЕЗр'],
+'config-cycle -p -u {url} content.plugins ;; reload' : ['TPu','ЕЗг'],
+'config-cycle -p -u *://*.{url:host}/* content.javascript.enabled ;; reload' : ['TSH','ЕІР'],
+'config-cycle -p -u *://{url:host}/* content.javascript.enabled ;; reload' : ['TSh','ЕІр'],
+'config-cycle -p -u {url} content.javascript.enabled ;; reload' : ['TSu','ЕІг'],
+'config-cycle -p -t -u *://*.{url:host}/* content.cookies.accept all no-3rdparty never ;; reload' : ['TcH','ЕсР'],
+'config-cycle -p -t -u *://{url:host}/* content.cookies.accept all no-3rdparty never ;; reload' : ['Tch','Еср'],
+'config-cycle -p -t -u {url} content.cookies.accept all no-3rdparty never ;; reload' : ['Tcu','Есг'],
+'config-cycle -p -t -u *://*.{url:host}/* content.images ;; reload' : ['TiH','ЕшР'],
+'config-cycle -p -t -u *://{url:host}/* content.images ;; reload' : ['Tih','Ешр'],
+'config-cycle -p -t -u {url} content.images ;; reload' : ['Tiu','Ешг'],
+'config-cycle -p -t -u *://*.{url:host}/* content.plugins ;; reload' : ['TpH','ЕзР'],
+'config-cycle -p -t -u *://{url:host}/* content.plugins ;; reload' : ['Tph','Езр'],
+'config-cycle -p -t -u {url} content.plugins ;; reload' : ['Tpu','Езг'],
+'config-cycle -p -t -u *://*.{url:host}/* content.javascript.enabled ;; reload' : ['TsH','ЕіР'],
+'config-cycle -p -t -u *://{url:host}/* content.javascript.enabled ;; reload' : ['Tsh','Еір'],
+'config-cycle -p -t -u {url} content.javascript.enabled ;; reload' : ['Tsu','Еіг'],
+}
+#+end_src
+Загрузки
+#+begin_src python :noweb-ref qutebrowser-config
+d_download={
+'download-cancel' : ['da','вф'],
+'download-delete' : ['dx','вч'],
+'download-clear' : ['dc','вс'],
+'download' : ['dd','вв'],
+'download-open' : ['do','вщ'],
+}
+#+end_src
+Клавиши режима каретки
+#+begin_src python :noweb-ref qutebrowser-config
+d_caret_mode={
+'move-to-end-of-line' : ['$',''],
+'move-to-start-of-line' : ['0',''],
+'selection-drop' : ['<Ctrl-Space>',''],
+'mode-leave' : ['<Escape>',''],
+'yank selection' : ['<Return>',''],
+'selection-toggle' : ['<Space>',''],
+'move-to-end-of-document' : ['G','П'],
+'scroll left' : ['<Ctrl-Left>',''],
+'scroll down' : ['<Ctrl-Down>',''],
+'scroll up' : ['<Ctrl-Up>',''],
+'scroll right' : ['<Ctrl-Right>',''],
+'selection-toggle --line' : ['V','М'],
+'yank selection -s' : ['Y','Н'],
+'move-to-start-of-prev-block' : ['[','х'],
+'move-to-start-of-next-block' : [']','ї'],
+'move-to-prev-word' : ['b','и'],
+'mode-enter normal' : ['c','с'],
+'move-to-end-of-word' : ['e','у'],
+'move-to-start-of-document' : ['gg','пп'],
+'move-to-prev-char' : ['<Left>',''],
+'move-to-next-line' : ['<Down>',''],
+'move-to-prev-line' : ['<Up>',''],
+'move-to-next-char' : ['<Right>',''],
+'selection-reverse' : ['o','щ'],
+'selection-toggle' : ['v','м'],
+'move-to-next-word' : ['w','ц'],
+'yank selection' : ['y','н'],
+'move-to-end-of-prev-block' : ['{','Х'],
+'move-to-end-of-next-block' : ['}','Ї'],
+}
+#+end_src
+Клавиши командного режима
+#+begin_src python :noweb-ref qutebrowser-config
+d_command_mode={
+'rl-backward-word' : ['<Alt-B>',''],
+'rl-backward-kill-word' : ['<Alt-Backspace>',''],
+'rl-kill-word' : ['<Alt-D>',''],
+'rl-forward-word' : ['<Alt-F>',''],
+'rl-delete-char' : ['<Ctrl-?>',''],
+'rl-beginning-of-line' : ['<Ctrl-A>',''],
+'rl-backward-char' : ['<Ctrl-B>',''],
+'completion-item-yank' : ['<Ctrl-C>',''],
+'completion-item-del' : ['<Ctrl-D>',''],
+'rl-end-of-line' : ['<Ctrl-E>',''],
+'rl-forward-char' : ['<Ctrl-F>',''],
+'rl-backward-delete-char' : ['<Ctrl-H>',''],
+'rl-kill-line' : ['<Ctrl-K>',''],
+'command-history-next' : ['<Ctrl-N>',''],
+'command-history-prev' : ['<Ctrl-P>',''],
+'command-accept --rapid' : ['<Ctrl-Return>',''],
+'completion-item-yank --sel' : ['<Ctrl-Shift-C>',''],
+'completion-item-focus prev-category' : ['<Ctrl-Shift-Tab>',''],
+'rl-filename-rubout' : ['<Ctrl-Shift-W>',''],
+'completion-item-focus next-category' : ['<Ctrl-Tab>',''],
+'rl-unix-line-discard' : ['<Ctrl-U>',''],
+'rl-rubout " "' : ['<Ctrl-W>',''],
+'rl-yank' : ['<Ctrl-Y>',''],
+'completion-item-focus --history next' : ['<Down>',''],
+'mode-leave' : ['<Escape>',''],
+'completion-item-focus next-page' : ['<PgDown>',''],
+'completion-item-focus prev-page' : ['<PgUp>',''],
+'command-accept' : ['<Return>',''],
+'completion-item-del' : ['<Shift-Delete>',''],
+'completion-item-focus prev' : ['<Shift-Tab>',''],
+'completion-item-focus next' : ['<Tab>',''],
+'completion-item-focus --history prev' : ['<Up>',''],
+'cmd-set-text -a {url}' : ['<Alt+Space>u','<Alt+Space>г'], 
+'cmd-set-text -a {url:pretty}' : ['<Alt+Space>w','<Alt+Space>ц'], 
+'cmd-set-text -a {url:host}' : ['<Alt+Space>h','<Alt+Space>р'], 
+'cmd-set-text -a {url:domain}' : ['<Alt+Space>d','<Alt+Space>в'], 
+'cmd-set-text -a {url:query}' : ['<Alt+Space>q','<Alt+Space>й'], 
+'cmd-set-text -a {url:port}' : ['<Alt+Space>p','<Alt+Space>з'], 
+'cmd-set-text -a {title}' : ['<Alt+Space>t','<Alt+Space>е'], 
+'cmd-set-text -a {clipboard}' : ['<Alt+Space>y','<Alt+Space>н'], 
+'cmd-set-text -a {primary}' : ['<Alt+Space>s','<Alt+Space>і'], 
+}
+#+end_src
+Клавиши режима хинтов
+#+begin_src python :noweb-ref qutebrowser-config
+d_hint_mode={
+'hint all tab-bg' : ['<Ctrl-B>',''],
+'hint links' : ['<Ctrl-F>',''],
+'hint --rapid links tab-bg' : ['<Ctrl-R>',''],
+'mode-leave' : ['<Escape>',''],
+'hint-follow' : ['<Return>',''],
+}
+#+end_src
+Клавиши режима вставки
+#+begin_src python :noweb-ref qutebrowser-config
+d_insert_mode={
+'edit-text' : ['<Ctrl-E>',''],
+'mode-leave' : ['<Escape>',''],
+'fake-key <Escape>' : ['<Shift-Escape>',''],
+'insert-text -- {primary}' : ['<Shift-Ins>',''],
+'spawn -m -u crow {primary}' : ['<Alt+Space>c','<Alt+Space>с'],
+}
+#+end_src
+Режим passhtrough
+#+begin_src python :noweb-ref qutebrowser-config
+d_passhtrough_mode={
+'mode-leave' : ['<Shift-Escape>',''],
+}
+#+end_src
+Режим prompt
+#+begin_src python :noweb-ref qutebrowser-config
+d_prompt_mode={
+'rl-backward-word' : ['<Alt-B>',''],
+'rl-backward-kill-word' : ['<Alt-Backspace>',''],
+'rl-kill-word' : ['<Alt-D>',''],
+'rl-forward-word' : ['<Alt-F>',''],
+'prompt-yank --sel' : ['<Alt-Shift-Y>',''],
+'prompt-yank' : ['<Alt-Y>',''],
+'rl-delete-char' : ['<Ctrl-?>',''],
+'rl-beginning-of-line' : ['<Ctrl-A>',''],
+'rl-backward-char' : ['<Ctrl-B>',''],
+'rl-end-of-line' : ['<Ctrl-E>',''],
+'rl-forward-char' : ['<Ctrl-F>',''],
+'rl-backward-delete-char' : ['<Ctrl-H>',''],
+'rl-kill-line' : ['<Ctrl-K>',''],
+'prompt-open-download --pdfjs' : ['<Ctrl-P>',''],
+'rl-filename-rubout' : ['<Ctrl-Shift-W>',''],
+'rl-unix-line-discard' : ['<Ctrl-U>',''],
+'rl-rubout " "' : ['<Ctrl-W>',''],
+'prompt-open-download' : ['<Ctrl-X>',''],
+'rl-yank' : ['<Ctrl-Y>',''],
+'prompt-item-focus next' : ['<Down>',''],
+'mode-leave' : ['<Escape>',''],
+'prompt-accept' : ['<Return>',''],
+'prompt-item-focus prev' : ['<Shift-Tab>',''],
+'prompt-item-focus next' : ['<Tab>',''],
+'prompt-item-focus prev' : ['<Up>',''],
+}
+#+end_src
+Режим yesno
+#+begin_src python :noweb-ref qutebrowser-config
+d_yesno_mode={
+'prompt-yank --sel' : ['<Alt-Shift-Y>',''],
+'prompt-yank' : ['<Alt-Y>',''],
+'mode-leave' : ['<Escape>',''],
+'prompt-accept' : ['<Return>',''],
+'prompt-accept --save no' : ['N'],
+'prompt-accept --save yes' : ['Y'],
+'prompt-accept no' : ['n'],
+'prompt-accept yes' : ['y'],
+}
+#+end_src
+Мои команды
+#+begin_src python :noweb-ref qutebrowser-config
+d_spawn={
+'cmd-set-text -s :spawn' : ['!!',''],
+'spawn kitty ranger' : ['!r','!к'],
+'spawn kitty' : ['!t','!е'],
+'magnet' : ['!m','!ь'],
+'cmd-set-text -s :spawn yt-dlp  {clipboard}' : ['!y','!н'],
+'spawn chromium {url}' : ['c!','с!'],
+'cmd-set-text -s :spawn -u cachetoorg "{title}"' : ['!P','!З'],
+'cmd-set-text -s :spawn pandoc --wrap=none --extract-media="/home/andrey/Загрузки/{title}" -o "/home/andrey/Загрузки/{title}.org" {url}' : ['!p','!з'],
+}
+
+d_my_other={
+'hint tgmsg userscript tgmsg' : [',<Space>','б<Space>'],
+"jseval window.location.href= '{url:domain}'.replace(/\\./g,'-')+'.translate.goog'+'{url:path}'+'?_x_tr_sl=auto&_x_tr_tl=ru&_x_tr_hl=uk&_x_tr_pto=wapp'" : [',t','бе'],
+'spawn -m -u crow {primary}' : [',c','бс'],
+}
+#+end_src
+Разное
+#+begin_src python :noweb-ref qutebrowser-config
+d_other={
+'repeat-command' : ['.','ю'],
+'cmd-set-text /' : ['/',''],
+'cmd-set-text :' : [':','Ж'],
+'print' : ['<Ctrl-Alt-p>',''],
+'quit' : ['<Ctrl-Q>',''],
+'selection-follow' : ['<Ctrl-Return>',''],
+'nop' : ['<Ctrl-Shift-Tab>',''],
+'mode-enter passthrough' : ['<Ctrl-V>',''],
+'stop' : ['<Ctrl-s>',''],
+'clear-keychain ;; search ;; fullscreen --leave' : ['<Escape>',''],
+#'fullscreen' : ['<F11>',''],
+'selection-follow -t' : ['<Return>',''],
+'cmd-set-text ?' : ['?',''],
+'macro-run' : ['@',''],
+'quit' : ['ZQ','ЯЙ'],
+'quit --save' : ['ЯЯ','ZZ'],
+'undo -w' : ['U','Г'],
+'mode-enter caret ;; selection-toggle --line' : ['V','М'],
+'search-prev' : ['N','Т'],
+'reload -f' : ['R','К'],
+'view-source' : ['gf','па'],
+'search-next' : ['n','т'],
+'mode-enter insert' : ['i','ш'],
+'macro-record' : ['q','й'],
+'reload' : ['r','к'],
+'save' : ['sf','іа'],
+'undo' : ['u','г'],
+'mode-enter caret' : ['v','м'],
+'devtools-focus' : ['wIf','цШа'],
+'devtools left' : ['wI<Left>','цШ<Left>'],
+'devtools bottom' : ['wI<Down>','цШ<Down>'],
+'devtools top' : ['wI<Up>','цШ<Up>'],
+'devtools right' : ['wI<Right>','цШ<Right>'],
+'devtools window' : ['wIw','цШц'],
+'devtools' : ['wi','цш'],
+'insert-text {clipboard}' : ['<Ctrl-V>','<Ctrl-Y>'],
+}
+#+end_src
+Назначение ранее определенных клавиш
+#+begin_src python :noweb-ref qutebrowser-config
+def d_bind(d,m):
+    for c, k_l in d.items():
+        for k in k_l:
+            if k:
+                config.bind(k,c,mode=m)
+
+
+c.bindings.default={}
+for d in [d_open_url,d_hints,d_tabs,d_history,d_clipboard,d_bookmarks,d_zoom,d_config,d_download,d_other]:
+    d_bind(d,'normal')
+d_bind(d_caret_mode,'caret')
+d_bind(d_command_mode,'command')
+d_bind(d_hint_mode,'hint')
+d_bind(d_insert_mode,'insert')
+d_bind(d_passhtrough_mode,'passthrough')
+d_bind(d_prompt_mode,'prompt')
+d_bind(d_yesno_mode,'yesno')
+d_bind(d_spawn,'normal')
+d_bind(d_my_other,'normal')
+
+#+end_src
+Загрузка автоконфигурации 
+#+begin_src python :noweb-ref qutebrowser-config
+config.load_autoconfig()
+#+end_src
+*** quickmarks
+#+header: :tangle  ~/.config/qutebrowser/quickmarks_ :mkdirp yes 
+#+begin_src text 
+social facebook https://www.facebook.com
+social telegramz https://web.telegram.org/a/#-1153786240
+social whatsapp https://web.whatsapp.com/
+chatgpt https://chat.openai.com/
+calibre http://localhost:2222/
+privat24 https://next.privat24.ua/
+google news https://news.google.com/topstories?hl=ru&gl=UA&ceid=UA:ru
+git https://github.com/AndrijSkeptyk
+nixos https://search.nixos.org/packages
+docs https://readthedocs.org/
+whois https://whois.ru/today.ua
+ai libretranslate http://localhost:5000
+search fadar https://www.faganfinder.com/
+doc https://i3wm.org/docs/userguide.html
+doc  bcachefs https://bcachefs.org/
+ai poe https://poe.com/
+tur 1 https://turkishtv.co/934-rannyaya-ptashka-erkenci-kus-vse-serii-na-russkom-yazyke-tureckiy-serial-smotret-onlayn.html
+ai git docker farfalle https://github.com/rashadphz/farfalle
+google blogger https://draft.blogger.com/blog/posts/1207372942119176135
+ai image erase https://huggingface.co/spaces/finegrain/finegrain-object-eraser
+book lg https://libgen.is/
+roam https://github-com.translate.goog/org-roam/org-roam?_x_tr_sl=auto&_x_tr_tl=ru&_x_tr_hl=uk&_x_tr_pto=wapp
+tur 2 https://turoktv.com/2937-a59-zimorodok-seria-1.html
+torrent rutracker net https://rutracker.net
+torrent rutracker org https://rutracker.net
+ai whisher large https://huggingface.co/spaces/hf-audio/whisper-large-v3-turbo
+ai wisher jax https://huggingface.co/spaces/sanchit-gandhi/whisper-jax#:~:text=whisper-jax.%20like%202.25k.%20Running%20App%20Files%20Files%20Community%20126%20Refreshing.
+agent ai https://github-com.translate.goog/mikekelly/AgentK?_x_tr_sl=auto&_x_tr_tl=ru&_x_tr_hl=uk&_x_tr_pto=wapp
+ai image background https://huggingface.co/spaces/innova-ai/video-background-removal
+matecat https://www.matecat.com/
+ai chat gemimy https://gemini.google.com/app/937aa3ab7add86b6?hl=en-IN
+ai translator quillbot https://quillbot.com/translate?_x_tr_hist=true
+ai translator reverso https://www.reverso.net/text-translation
+ai translator mashine translate https://www.machinetranslation.com/
+#+end_src
+*** bookmarks
+#+header: :tangle  ~/.config/qutebrowser/bookmarks/urls_ :mkdirp yes 
+#+begin_src text 
+http://stable-diffusion-guide.s3-website-us-west-2.amazonaws.com/v2/things.html stable diffusion prompt study v2
+https://a16z.com/ai-survey/getting-started/ About This Site | Andreessen Horowitz
+https://aitopics.org/search AITopics
+https://app.cedille.ai/ cedille.ai | Ваш писательский помощник. :text :ai
+https://colab.research.google.com/#scrollTo=5fCEDCU_qrC0 Добро пожаловать в Colaboratory! - Colaboratory
+https://data2data.ru/tts/ Текст в речь :ai :text :speech
+https://dataconomy.com/2022/11/meta-galactica-ai-demo-model-how-use-paper/ Galactica AI от Meta: 
+https://fabiocolacio.github.io/Marker/ markdown editor
+https://github.com/DamienCassou/json-navigator  Просмотр структур :json и навигация по ним :emacs
+https://github.com/DavidAnson/markdownlint-cli2 GitHub - DavidAnson/markdownlint-cli2: Быстрый, гибкий интерфейс командной строки на основе конфигурации для проверки файлов Markdown/CommonMark с помощью библиотеки markdownlint.
+https://github.com/Guang000/Awesome-Dataset-Distillation Guang000/Awesome-Dataset-Distillation: Потрясающие документы по дистилляции набора данных
+https://github.com/RHVoice/RHVoice RHVoice/RHVoice: бесплатный синтезатор речи с открытым исходным кодом для русского и других языков
+https://github.com/SolarLune/Grout Grout :wm :tiling
+https://github.com/Sygil-Dev/sygil-webui GitHub - Sygil-Dev/sygil-webui: Стабильный веб-интерфейс Diffusion
+https://github.com/ai-collection/ai-collection/
+https://github.com/altryne/awesome-ai-art-image-synthesis :ai :image :collection
+https://github.com/awesomedata/awesome-public-datasets awesomedata/awesome-public-datasets: :ai :detasets :collection
+https://github.com/denisidoro/navi  denisidoro/navi: An interactive cheatsheet tool for the command-line
+https://github.com/divamgupta/diffusionbee-stable-diffusion-ui  Diffusion Bee — это самый простой способ запустить Stable Diffusion локально на вашем M1 Mac. Поставляется с установщиком в один клик. Никаких зависимостей или технических знаний не требуется.
+https://github.com/eugeneyan/open-llms  Список открытых LLM, доступных для коммерческого использования.
+https://github.com/ggerganov/llama.cpp ggerganov/llama.cpp: Порт модели LLaMA Facebook на C/C++
+https://github.com/grocid/gtile GitHub - grocid/gtile :wm :tilining
+https://github.com/jbhuang0604/awesome-computer-vision  :ai :collection
+https://github.com/luong-komorebi/Awesome-Linux-Software  :linux :collection
+https://github.com/mckaywrigley/ai-code-translator mckaywrigley/ai-code-translator: Используйте ИИ для перевода кода с одного языка на другой. :ai :code :translator
+https://github.com/miyuchina/mistletoe  Быстрый, расширяемый и соответствующий спецификациям анализатор :markdown на чистом Python.
+https://github.com/openai/gpt-2 openai/gpt-2: :ai :gpt2 :text
+https://github.com/openai/whisper GitHub  openai/whisper: распознавание речи :ai :transcoder :text :speech
+https://github.com/paperswithcode/galai  Модель API для GALACTICA :ai
+https://github.com/peterwang512/FALdetector#2-run-our-models  Код для статьи: Обнаружение отфотошопленных лиц с помощью сценариев Photoshop 
+https://github.com/pharmapsychotic/clip-interrogator : Image to prompt with BLIP and CLIP
+https://github.com/reorx/awesome-chatgpt-api :chatgpt :api тщательно подобранный список приложений и инструментов, которые не только используют новый API ChatGPT, но и позволяют пользователям настраивать свои собственные ключи API, что позволяет бесплатно и по запросу использовать их собственную квоту. :gpt
+https://github.com/ssokolow/quicktile :wm tiling
+https://github.com/topics :topic :git 
+https://github.com/vzakharov/jukebox-webui webui: Веб-интерфейс на базе Google Colab для создания музыки с помощью OpenAI Jukebox :ai :sound :music
+https://habr.com/ru/articles/718438/ Медицинские датасеты для машинного обучения: цели, типы и способы применения :ai :collection :dataset :habr
+https://habr.com/ru/post/129343/ Учимся писать userscript'ы / Хабр :userscript :js :habr
+https://habr.com/ru/post/60977/ Синтез русской речи в Linux / Хабр :habr
+https://huggingface.co/spaces/huggingface-projects/diffuse-the-rest Diffuse The Rest --- пространство для обнимающего лица от Huggingface-projects
+https://huggingface.co/spaces/kazuk/youtube-whisper-09 Youtube Whisper - a Hugging Face Space by kazuk
+https://huggingface.co/spaces/stabilityai/stable-diffusion Stable Diffusion 2-1 - a Hugging Face Space by stabilityai
+https://huggingface.co/succinctly/text2image-prompt-generator?text=face+of+skeptyk+inspect+postmodernism succinctly/text2image-prompt-generator · Hugging Face
+https://mdformat.readthedocs.io/en/stable/ mdformat 0.7.17 documentation
+https://omegat.org/ru/ OmegaT — свободная программа для автоматизации перевода
+https://onedev.net/post/244 TTS движки для Ubuntu Linux (Text-to-Speak)
+https://paperswithcode.com/dataset/cifar-10 CIFAR-10 Dataset | Papers With Code
+https://products.wolframalpha.com/api Wolfram|Alpha APIs: Интеграция вычислительных знаний
+https://proximacentaurib.notion.site/2b07d3195d5948c6a7e5836f9d535592?v=b5b75a67cc52483c9965cfc141f6f582 Stable Diffusion V1 Modifier Studies | Просмотр галереи
+https://replicate.com/methexis-inc/img2prompt/examples Examples -- methexis-inc/img2prompt -- Replicate
+https://replicate.com/nightmareai/real-esrgan nightmareai/real-esrgan -- Запуск с помощью API при репликации
+https://replicate.com/stability-ai/stable-diffusion stability-ai/stable-diffusion -- Запуск с помощью API при репликации
+https://resources.wolframcloud.com/NeuralNetRepository/ Wolfram Репозиторий нейронных сетей моделей нейронных сетей
+https://resources.wolframcloud.com/NeuralNetRepository/resources/GPT2-Transformer-Trained-on-WebText-Data/ Преобразование GPT2 - Wolfram Neural Net Repository
+https://rizzoma.com/topic/9f46f955831323f11a6b5c159f841eee/0_b_6com_83f1h/ Rizzoma
+https://ru.gecid.com/nouts/samsung_r60plus/ Обзор ноутбука SAMSUNG R60Plus GECID.com.
+https://rutracker.org RuTracker
+https://rytr.me/ Rytr - Лучший ИИ-писатель, генератор контента и помощник по написанию
+https://same.energy/search?q=jo 'jo' on Same Energy
+https://summate.it/ Summate.it --- быстро резюмируйте веб-статьи
+https://typeset.io/ Откройте для себя, создайте и опубликуйте свою исследовательскую работу | SciSpace по набору
+https://wiki.archlinux.org/title/Festival_(%D0%A0%D1%83%D1%81%D1%81%D0%BA%D0%B8%D0%B9) Festival (Русский) - ArchWiki
+https://www.aicyclopedia.com/ AIcyclopedia | Самая большая энциклопедия искусственного интеллекта
+https://www.allsearch.ai/ AllSearch.ai
+https://www.craiyon.com/ Craiyon, AI Генератор изображений
+https://www.deepl.com/translator/files DeepL Translate: The world's most accurate translator
+https://www.perplexity.ai/ Perplexity AI: Ask Anything
+https://www.quora.com/ Quora
+https://www.remove.bg/ Remove Background from Image for Free – remove.bg
+https://www.reverso.net/text-translation Reverso  перевод, словарь
+https://www.riffusion.com/?&prompt=classical+italian+tenor+operatic+pop&denoising=0.75&seedImageId=og_beat Riffusion
+https://www.summarize.tech/ summary.tech: видеорезюме на основе искусственного интеллекта
+https://www.text-to-speech.online/?ref=aicollection Free Text to Speech Online Converter Tools
+https://www.veed.io/pricing Pricing - VEED.IO
+https://www.wolfram.com/resources/tools-for-AIs/ Wolfram Tools for AIs: Связи с вычислительным интеллектом
+https://www.wolframalpha.com/input?i=weather+Zaporizhzhya+last+year погода в Запорожье в прошлом году 
+https://you.com/search?q=who+are+you&tbm=youchat&cfr=chat who are you 
+#+end_src
+** cortile
+*** Файл конфигурации 
+#+header: :tangle  ~/.config/qutebrowser/bookmarks/urls_ :mkdirp yes 
+#+begin_src toml 
+:tangle ~/git/nixosconfig/delux-nix/dotfiles/cortile.toml :mkdirp yes
+       ################################################################################
+       #                                                                              #
+       #           https://github.com/leukipp/cortile/blob/main/config.toml           #
+       #                                                                              #
+       ################################################################################
+
+       #################################### Tiling ####################################
+
+      # Tiling will be enabled on application start if set to true (true | false).
+      tiling_enabled = true
+
+      # Initial tiling layout ("vertical-left" | "vertical-right" | "horizontal-top" | "horizontal-bottom" | "maximized" | "fullscreen").
+      tiling_layout = "maximized"
+
+      # An overlay window is displayed for this time period [ms] when the layout was changed (0 = disabled).
+      tiling_gui = 1500
+
+      # Menu entries in systray which shows the tiling state as icon ([] = disabled).
+      # tiling_icon = [
+      #   ["ACTION", "TEXT"] = ["action strings from [keys] section", "text to show in the menu"],
+      #   ["", ""] = "show a separator line",
+      # ]
+      tiling_icon = [
+  	["toggle", "Enabled"],
+  	["", ""],
+  	["master_increase", "Add Master"],
+  	["master_decrease", "Remove Master"],
+  	["", ""],
+  	["slave_increase", "Add Slave"],
+  	["slave_decrease", "Remove Slave"],
+  	["", ""],
+  	["reset", "Reset"],
+  	["exit", "Exit"],
+      ]
+
+      #################################### Window ####################################
+
+      # Regex RE2 syntax to ignore windows (WM_CLASS string can be found by running `xprop WM_CLASS`).
+      # window_ignore = [
+      #   ["WM_CLASS", "WM_NAME"] = ["ignore all windows with this class", "but allow those with this name"]
+      # ]
+      window_ignore = [
+  	["nm.*", ""],
+  	["xfce4-appfinder", ""],
+  	["gcr.*", ""],
+  	["polkit.*", ""],
+  	["wrapper.*", ""],
+  	["lightdm.*", ""],
+  	["blueman.*", ""],
+  	["pavucontrol.*", ""],
+  	["firefox.*", ".*Mozilla Firefox"],
+  	["conky", ""],
+      ]
+
+      # Maximum number of allowed master windows (0 - 5).
+      window_masters_max = 2
+
+      # Maximum number of allowed slave windows (1 - 5).
+      window_slaves_max = 4
+
+      # How much space should be left between windows (0 - 100).
+      window_gap_size = 5
+
+      # Window decorations will be removed if set to false (true | false).
+      window_decoration = true
+
+      ################################## Proportion ##################################
+
+      # How much to increment/decrement master-slave area (0.0 - 1.0).
+      proportion_step = 0.05
+
+      # Minimum window width/height in proportion to workspace (0.0 - 1.0).
+      proportion_min = 0.2
+
+      ##################################### Edge #####################################
+
+      # Margin of the tiling area ([top, right, bottom, left]).
+      edge_margin = [0, 0, 0, 0]
+
+      # Margin of the tiling area on primary screen ([top, right, bottom, left]).
+      edge_margin_primary = [0, 0, 0, 0]
+
+      # Width and height of a hot-corner area within the edge corners (0 - 100).
+      edge_corner_size = 10
+
+      # Width or height of a hot-corner area within the edge centers (0 - 100).
+      edge_center_size = 100
+
+      ################################################################################
+      [colors]                             # RGBA color values used for ui elements. #
+      ################################################################################
+
+      # Layout window text color.
+      gui_text = [255, 255, 255, 255]
+
+      # Layout window background color.
+      gui_background = [30, 30, 40, 255]
+
+      # Layout slave client rectangle color.
+      gui_client_slave = [58, 58, 78, 255]
+
+      # Layout master client rectangle color.
+      gui_client_master = [98, 98, 128, 255]
+
+      # Systray icon background color.
+      icon_background = [0, 0, 0, 0]
+
+      # Systray icon foreground color.
+      icon_foreground = [255, 255, 255, 255]
+
+      ################################################################################
+      [keys]                            # Key symbols can be found by running `xev`. #
+      ################################################################################
+
+      # Enable tiling on the current screen (Home = Fn_Left).
+      enable = "Mod4-Home"
+
+      # Disable tiling on the current screen (End = Fn_Right).
+      disable = "Mod4-End"
+
+      # Disable tiling and restore windows on the current screen.
+      restore = "Mod4-R"
+
+      # Toggle between enable and disable on the current screen.
+      toggle = "Mod4-T"
+
+      # Reset layouts to default proportions (BackSpace = Delete_Left)
+      reset = "Mod4-BackSpace"
+
+      # Cycles through next layouts (Next = Page_Down).
+      # cycle_next = "Control-Shift-Next"
+
+      # Cycles through previous layouts (Prior = Page_Up).
+      # cycle_previous = "Control-Shift-Prior"
+
+      # Activates the vertical-left layout (Left = Arrow_Left).
+      layout_vertical_left = "Mod4-Left"
+
+      # Activates the vertical-right layout (Right = Arrow_Right).
+      layout_vertical_right = "Mod4-Right"
+
+      # Activates the horizontal-top layout (Up = Arrow_Up).
+      layout_horizontal_top = "Mod4-Up"
+
+      # Activates the horizontal-bottom layout (Down = Arrow_Down).
+      layout_horizontal_bottom = "Mod4-Down"
+
+      # Activates the maximized layout (Space = Blank).
+      layout_maximized = "Mod4-Space"
+
+      # Activates the fullscreen layout (Return = Enter).
+      layout_fullscreen = "Mod4-F"
+
+      # Make the active window a master (KP_5 = Num_5).
+      master_make = "Mod4-M"
+
+      # Make the next window a master (KP_6 = Num_6).
+      # master_make_next = "Control-Shift-KP_6"
+
+      # Make the previous window a master (KP_4 = Num_4).
+      # master_make_previous = "Control-Shift-KP_4"
+
+      # Increase the number of masters (KP_Add = Num_+).
+      master_increase = "Mod4-]"
+
+      # Decrease the number of masters (KP_Subtract = Num_-).
+      master_decrease = "Mod4-["
+
+      # Increase the number of slaves (Plus = +).
+      slave_increase = "Mod4-Plus"
+
+      # Decrease the number of slaves (Minus = -).
+      slave_decrease = "Mod4-Minus"
+
+      # Increase the proportion of master-slave area (KP_3 = Num_3).
+      proportion_increase = "Mod4-."
+
+      # Decrease the proportion of master-slave area (KP_1 = Num_1).
+      proportion_decrease = "Mod4-,"
+
+      # Moves focus to the next window (KP_2 = Num_2).
+      window_next = "Mod4-Tab"
+
+      # Moves focus to the previous window (KP_8 = Num_8).
+      window_previous = "Mod4-Shift-Tab"
+
+      # The commands above will affect all screens if this key is pressed in addition (Mod1 = Alt_L).
+      # mod_screens = "Mod1"
+
+      # The commands above will affect all workspaces if this key is pressed in addition (Mod4 = Super_L).
+      # mod_workspaces = "Mod4"
+
+      ################################################################################
+      [corners]                   # Action strings from [keys] or external commands. #
+      ################################################################################
+
+      # Corner at top left.
+  #    top_left = "window_previous"
+      top_left = ""
+
+      # Corner at top center.
+      top_center = ""
+
+      # Corner at top right.
+  #    top_right = "master_make"
+      top_right = ""
+
+      # Corner at center right.
+      center_right = ""
+
+      # Corner at bottom right.
+  #    bottom_right = "proportion_increase"
+      bottom_right = ""
+
+      # Corner at bottom center.
+      bottom_center = ""
+
+      # Corner at bottom left.
+  #    bottom_left = "proportion_decrease"
+     bottom_left = ""
+
+      # Corner at center left.
+      center_left = ""
+
+      ################################################################################
+      [systray]                   # Action strings from [keys] or external commands. #
+      ################################################################################
+
+      # Icon left click with pointer.
+      click_left = ""
+
+      # Icon middle click with pointer.
+  #    click_middle = "toggle"
+      click_middle = ""
+
+      # Icon right click with pointer.
+      click_right = ""
+
+      # Icon vertical scroll up with pointer.
+  #    scroll_up = "cycle_previous"
+      scroll_up = ""
+
+      # Icon vertical scroll down with pointer.
+  #    scroll_down = "cycle_next"
+      scroll_down = ""
+
+      # Icon horizontal scroll left with pointer.
+  #    scroll_left = "proportion_decrease"
+      scroll_left = ""
+
+      # Icon horizontal scroll right with pointer.
+  #    scroll_right = "proportion_increase"
+      scroll_right = ""
+#+end_src
+*** Копирование конфига в домашний каталог
+#+header: :noweb-ref delux-home-files
+#+begin_src nix :noweb yes 
+".config/cortile/config.toml".source=dotfiles/cortile.toml;
+#+end_src
+** kitty
+#+header: :noweb-ref delux-home-programs
+#+begin_src nix
+kitty.enable=true;
+kitty.settings={
+font_family="Terminus";
+font_size=20;
+shell_integration="enabled";
+allow_hyperlinks="yes";
+allow_remote_control="yes";
+background="#0d0e1c";
+foreground="#ff9f80";
+enabled_layouts="splits:split_axis=horizontal";
+listen_on="unix:/tmp/kitty";
+term= "kitty";
+shell= "bash --login";  
+};
+#+end_src
+** clifm
+#+begin_src txt :tangle ~/.config/clifm/profiles/default/preview.clifm  :mkdirp yes
+                  ############################################
+                  #  Конфигурационный файл для Shotgun       #
+                  # Предварительный просмотрщик файлов Clifm #
+                  ############################################
+
+#--------------------------------
+# Description
+#--------------------------------
+
+# Закомментированные и пустые строки опускаются.
+# Строки, начинающиеся с «#» или «;», являются комментариями.
+
+# Рекомендуется отредактировать этот файл, установив предпочитаемые приложения
+# Первое: таким образом, процесс предварительного просмотра будет более плавным и быстрым.
+# Вы даже можете удалить любые приложения, которые вы не используете.
+
+# Для получения подробной информации о синтаксисе обратитесь к файлу mimelist.clifm (через 'mm edit' или F6).
+
+# Раскомментируйте эту строку, чтобы использовать пистолет (или любое другое приложение для предварительного просмотра):
+;.*=pistol
+
+# Раскомментируйте и отредактируйте эту строку, чтобы использовать скрипт scope от Ranger:
+;.*=~/.config/ranger/scope.sh %f 120 80 /tmp/clifm/ True
+
+# Предварительный просмотр изображений
+# 1) Раскомментируйте приведенные ниже строки, чтобы включить предварительный просмотр изображений для указанных типов файлов.
+# 2) Запустите скрипт clifmrun (вы можете найти его в разделе DATADIR/clifm/plugins/, обычно
+#    /usr/local/share/clifm/plugins/).
+#
+# ПРИМЕЧАНИЕ 1: Параметры, переданные в clifmrun, будут переданы в сам clifm.
+# ПРИМЕЧАНИЕ 2: При использовании fzf -0.44 или более поздней версии и метода sixel, запуск clifmrun не требуется.
+# ПРИМЕЧАНИЕ 3: Вы можете редактировать clifmimg, чтобы изменить способ создания и отображения изображений (sixel,
+# поддерживается протокол Kitty и ueberzug). Если скрипт clifmimg не найден в разделе
+# ~/.config/clifm/, вы можете скопировать его из DATADIR/clifm/plugins/.
+#
+^application/.*(officedocument|msword|ms-excel|opendocument).*=clifmimg doc;
+^text/rtf$=clifmimg doc;
+^application/epub\+zip$=clifmimg epub;
+^application/pdf$=clifmimg pdf;
+^image/vnd.djvu=clifmimg djvu;
+^image/svg\+xml$=clifmimg svg;
+^image/gif$=clifmimg gif;
+^image/.*=clifmimg image;
+^video/.*=clifmimg video;
+^audio/.*=clifmimg audio;
+^application/postscript$=clifmimg postscript;
+;N:.*\.otf$=clifmimg font;
+;font/.*=clifmimg font;
+
+#--------------------------------
+# Directories
+#--------------------------------
+
+inode/directory=exa -a --tree --level=1 --;eza -a --tree --level=1 --;lsd -A --tree --depth=1 --color=always;tree -a -L 1;ls -Ap --color=always --indicator-style=none;
+
+
+#--------------------------------
+# Text
+#--------------------------------
+^text/rtf=catdoc --;
+N:.*\.json$=jq --color-output . ;python -m json.tool --;
+N:.*\.md$=glow -s dark --;mdcat --;
+^text/html$=w3m -dump;lynx -dump --;elinks -dump;pandoc -s -t markdown --;
+^text/.*=highlight -f --out-format=xterm256 --force --;bat --style=plain --color=always --;cat --;
+
+#--------------------------------
+# Office documents
+#--------------------------------
+
+N:.*\.xlsx$=xlsx2csv --;file -b --;
+N:.*\.(odt|ods|odp|sxw)$=odt2txt;pandoc -s -t markdown --;
+^application/(.*wordprocessingml.document|.*epub+zip|x-fictionbook+xml)=pandoc -s -t markdown --;
+^application/msword=catdoc --;file -b --;
+^application/ms-excel=xls2csv --;file -b --;
+
+#--------------------------------
+# Archives
+#--------------------------------
+
+N:.*\.rar=unrar lt -p- --;
+application/zstd=file -b --;true
+application/(zip|gzip|x-7z-compressed|x-xz|x-bzip*|x-tar)=atool --list --;bsdtar --list --file;
+N:.*\.(a|ace|alz|arc|arj|bz|bz2|cab|cpio|deb|gz|jar|lha|lz|lzh|lzma|lzo|rpm|rz|t7z|tar|tbz|tbz2|tgz|tlz|txz|tZ|tzo|war|xpi|xz|Z|zip)=atool --list --;bsdtar --list --file;
+
+#--------------------------------
+# PDF
+#--------------------------------
+
+^application/pdf$=pdftotext -l 10 -nopgbrk -q -- %f -;mutool draw -F txt -i --;exiftool;
+
+#--------------------------------
+# Image, video, and audio
+#--------------------------------
+
+^image/vnd.djvu=djvutxt;exiftool;
+^image/.*=exiftool;
+^video/.*=mediainfo;exiftool;
+^audio/.*=mediainfo;exiftool;
+
+#--------------------------------
+# Torrent
+#--------------------------------
+
+application/x-bittorrent=transmission-show --;aria2c -S --
+
+#--------------------------------
+# Fallback
+#--------------------------------
+
+.*=file -b --;
+# Add true(1) to silence the 'no application found' warning
+#.*=file -b --;true;
+
+#+end_src
+#+header: :tangle  ~/.config/clifm/profiles/default/clifmrc  :mkdirp yes  
+#+begin_src txt 
+		###########################################
+		#                  CLIFM                  #
+		#      The command line file manager      #
+		###########################################
+
+# Это основной конфигурационный файл Clifm.
+
+# Строки, начинающиеся с '#' или ';', комментируются (игнорируются).
+# Параметры, начинающиеся с ';', сохраняют значение по умолчанию, но комментируются.
+# Чтобы переопределить значение по умолчанию, раскомментируйте соответствующую опцию.
+
+
+#=====================================#
+# 1. ИНТЕРФЕЙС                        #
+#=====================================#
+
+# Показать скрытые файлы (т.е. файлы, начинающиеся с точки).
+;ShowHiddenFiles=false
+
+# Файлы, перечисленные в файле '.hidden' в текущем каталоге, будут скрыты
+# когда скрытые файлы не отображаются (т.е. ShowHiddenFiles установлен в false).
+# Поддерживаются как простые имена файлов, так и подстановочные знаки.
+;ReadDotHidden=false
+
+# Используйте регулярное выражение для фильтрации файлов из списка файлов.
+# Пример: "!.*~$" для исключения файлов резервных копий (оканчивающихся на ~), или "^\." для
+# Список только скрытых файлов. Также поддерживаются фильтры по типам файлов. Пример:
+# "=d" для перечисления только каталогов, или "!=l" для исключения символических ссылок.
+# Запустите 'help file-filters' для получения дополнительной информации.
+;Filter=""
+
+# Сначала перечислите каталоги.
+;ListDirsFirst=true
+
+# Количество файлов, содержащихся в каталоге, добавляется
+# к имени директории. Однако эта функция может замедлить работу
+# когда, например, выводится список файлов на удаленном сервере. Счетчик файлов
+# можно отключить здесь, с помощью опции --no-files-counter, или с помощью ключа
+# 'fc'  в самой программе.
+# Примечание: Для параметра Classify (см. ниже) необходимо установить значение true.
+;FilesCounter=true
+
+# Если вы работаете с цветами, добавьте индикатор директории в директории. Если
+# Запуск без цветов (с помощью опции --no-color), добавление типа файла
+# индикатор в конце имен файлов:
+# '/' for directories
+# '@' for symbolic links
+# '=' for sockets
+# '|' for FIFO/pipes
+# '*' for for executable files
+# '+' for block special files
+# '-' for character special files
+# '?' for unknown file types
+# Имейте в виду, что при запуске в облегченном режиме проверка на исполняемый файл
+# не будут выполняться, и тем самым индикатор не будет добавлен в
+# исполняемые файлы.
+# Примечание: Установка этой опции в значение false отключает счетчик файлов.
+;Classify=true
+
+# Символические ссылки окрашиваются в цвет имени целевого файла. Символ-индикатор
+# (по умолчанию '@') ставится в начале имени, чтобы обозначить его как
+# символическая ссылка.
+# Цвет этого индикатора можно настроить с помощью кода 'lc' в окне
+# файл цветовой схемы (поле InterfaceColors).
+;ColorLinksAsTarget=false
+
+# Mas, пейджер со списком файлов. Возможные значения:
+# 0/false: Отключите пейджер.
+# 1/true: Запускайте пейджер всякий раз, когда список файлов не помещается на экране.
+# >1: Запускайте пейджер всякий раз, когда количество файлов в текущем каталоге 
+# больше или равно этому значению (скажем, 1000).
+;Pager=false
+
+# Как вывести список файлов в пейджере. Возможные значения:
+# auto: использовать режим текущего листинга
+# long: список файлов в long view
+# short: Список файлов в short view
+;PagerView=auto
+
+# Как выводить список файлов: 0 = по вертикали (как это сделал бы ls(1)), 1 = по горизонтали.
+;ListingMode=0
+
+# Как сортировать перечисленные файлы.
+# Доступные варианты: none, name, version, extension, type, blocks, size,
+# links, atime, btime, ctime, mtime, inode, owner, и group.
+;Sort=version
+
+# По умолчанию файлы сортируются от меньшего к большему (например, от 'a' до 'z', если
+# с помощью метода "name"). Чтобы инвертировать этот порядок, установите SortReverse в значение
+# true (Вы также можете использовать опцию --sort-reverse  или команду 'st rev').
+;SortReverse=false
+
+# Отображение расширенных метаданных файлов рядом с именами файлов (формат длинного списка).
+;LongViewMode=false
+
+# Поля свойств, которые будут отображаться для каждого имени файла в режиме long view:
+# f = Счетчик файлов (для каталогов)
+# B = Выделяемые блоки
+# d = номер inode
+# l = Количество жестких ссылок
+# p|n = Разрешения: символьные (P) или числовые/восьмеричные (N)
+# i|I = user/group IDs: либо как число (i) or name (I)
+# G = если установлен i|I, не печатать группы
+# a|b|m|c = последний (a)ccess, (b)irth, (m)odification, или статуса (c)hange время
+# s|S = size (либо удобочитаемые человеком (s) или в байтах (S))
+# x = расширенные атрибуты/возможности/списки управления доступом (marked as '@') (Требует p|n)
+# Один минус ("-") отключает все поля
+#
+# Обратите внимание, что, за исключением 'x' и 'G', поля будут отображаться в
+# порядок указан здесь.
+#
+# Пример: отображать только разрешения (числовые) и размер (удобочитаемые):
+#PropFields="ns"
+# или для отображения прав доступа к файлам, времени изменения и размера (в байтах):
+#PropFields="pmS"
+;PropFields="xfpIsm"
+
+# Количество пробелов между полями при длинном просмотре. Возможные значения: 1-2.
+;PropFieldsGap=1
+
+# Стиль, используемый для печати временных меток в режиме long view.
+# Доступные стили: default, relative, iso, long-iso, full-iso, +FORMAT
+# FORMAT интерпретируется как в strftime(3).
+# Значение по умолчанию "+%b %e %H:%M" для последних файлов ( "+%b %e  %Y"
+# для более старых файлов.
+# Примеры:
+;TimeStyle="full-iso"
+;TimeStyle="relative"
+;TimeStyle="+%F %T"
+
+# При сортировке файлов по времени, используйте то же время, по которому файлы сортируются по времени
+# поле в длинном просмотре (без учета значения, установленного в PropFields).
+;TimeFollowsSort=true
+
+# Добавление элемента 'a', 'b', 'c', or 'm' к временной метке (только для длинного просмотра) для указания
+# вид временной метки, т.е., access, birth, status change, или modification
+# время соответственно. В случае относительных времен используются прописные буквы
+# вместо этого для лучшей видимости.
+;TimestampMark=false
+
+# То же, что и TimeStyle, но для команды 'p/pp'.
+# Доступные стили: по умолчанию, iso, long-iso, full-iso, full-iso-nano, +FORMAT
+# Наносекундная точность доступна с помощью модификатора %N.
+;PTimeStyle="+%Y-%m-%d %H:%M:%S.%N %z"
+
+# Если вы работаете в режиме длинного просмотра, печатайте директории в полном размере (т.е. рекурсивно).
+;FullDirSize=false
+
+# Печать  размера вместо фактического использования устройства.
+;ApparentSize=true
+
+# В облегченном режиме проверяются дополнительные типы файлов (кроме тех, которые предусмотрены
+# поле d_type структуры dirent (смотрите readdir(3))
+# отключены для ускорения процесса листинга. stat(3) и access(3)
+# вообще не выполняются, так что мы не можем знать заранее, есть ли файл
+# может быть прочитан текущим пользователем, если он является исполняемым, SUID, SGID, если
+# Сломана символическая ссылка и так далее. Проверка расширения файла игнорируется, так как
+#  функция Color per extension была отключена.
+;LightMode=false
+
+# Очистите экран перед перечислением файлов.
+# Возможные значения: 'true', 'false', 'internal' (ограничьте это поведение до
+# internal Только команды: команды оболочки не очищают экран).
+# Примечание: если установлено значение 'internal', текущий список файлов не будет обновляться
+# даже если внешняя команда создает, удаляет или переименовывает файл в
+# текущий каталог.
+ClearScreen=false
+
+# Максимальная длина имени файла для перечисленных файлов. Если для параметра TrimNames задано значение true,
+# имена, превышающие MaxFilenameLen, будут усечены в MaxFilenameLen
+# с использованием тильды (~).
+# Установите значение -1 (или пустое), чтобы снять это ограничение.
+# При работе в длинном режиме, эта настройка переопределяется MinFilenameTrim
+# всякий раз, когда MaxFilenameLen меньше, чем MinFilenameTrim.
+;MaxFilenameLen=20
+
+# Trim file names longer than MaxFilenameLen.
+;TrimNames=true
+
+# Минимальная длина, при которой имя файла может быть обрезано в режиме длинного просмотра.
+# При работе в длинном режиме эта настройка переопределяет MaxFilenameLen
+# всякий раз, когда MaxFilenameLen меньше, чем MinFilenameTrim.
+;MinFilenameTrim=20
+
+# Список имен рабочих областей, разделенных запятыми, в виде NUM=NAME.
+# Пример: "1=MAIN,2=EXTRA,3=GIT" или "1=α,2=β,3=γ"
+WorkspaceNames="1=manual,2=video,3=download,4=calibre,5=git,6=nix,7=work,8=temp"
+
+# Если установлено значение true, то настройки изменились в текущем рабочем пространстве (только через
+# командная строка или сочетания клавиш) остаются конфиденциальными для этого
+# workspace и сделан постоянным (только для текущей сессии), даже
+# при переключении рабочих мест.
+PrivateWorkspaceSettings=true
+
+# Вывод дискового пространства файловой системы, к которой принадлежит текущий каталог
+# в форме "FREE/TOTAL (FREE_PERCENTAGE) FS_TYPE DEV_NAME".
+DiskUsage=true
+
+# Вывести карту текущего положения в списке истории директории,
+# отображение предыдущих, текущих и следующих записей.
+;DirhistMap=false
+
+# Распечатайте список выбранных файлов после списка файлов. Так как это
+# список может стать довольно обширным, вы можете ограничить количество выводимых файлов
+# с использованием опции MaxPrintSelfiles ниже.
+;PrintSelfiles=false
+
+# Максимальное количество выбранных файлов для печати, если установлен PrinSelFiles
+# true. Возможные значения: -1 = без ограничений, 0 = авто (никогда не печатать больше
+# чем половина высоты терминала) или любое положительное значение.
+;MaxPrintSelfiles=0
+
+# Цветовые схемы (или просто темы) хранятся в директории colors
+# ($XDG_DATA_DIRS/clifm/colors, обычно /usr/local/share/clifm/colors
+# или /usr/share/clifm/colors). Вы можете разместить свои пользовательские темы в
+# $HOME/.config/clifm/colors.
+#
+# Используйте команду 'cs' или опцию командной строки '--color-scheme' для установки
+# тема.
+#
+# Запустите 'cs edit', чтобы отредактировать текущую тему.
+#
+# Каждая тема включает в себя определения цветов, так же как и определения для
+# prompt, предупреждение, разделительная линия и окно FZF.
+#
+# Используйте TAB для отображения доступных тем: 'cs TAB'.
+#
+# Посетите https://github.com/leo-arch/clifm-colors, чтобы получить несколько дополнительных тем.
+#
+# По умолчанию «default-256» или «default» (16 цветов), если поддерживают 256 цветов
+# не обнаруживается.
+ColorScheme=default-256
+
+# Включение/отключение иконок.
+# По умолчанию в качестве иконок используются эмодзи (широко доступные на сегодняшний день).
+# Также поддерживаются Nerd-fonts и icon-in-terminal, хотя Clifm
+# необходимо перекомпилировать, чтобы включить поддержку. Обратитесь к нашей вики
+# (https://github.com/leo-arch/clifm/wiki) для получения дополнительной информации.
+Icons=true
+
+
+#=====================================#
+# 2. КОМАНДНАЯ СТРОКА                 #
+#=====================================#
+
+# Установите стиль цитирования, используемый для раскрытия ELN (только обычные файлы).
+# Стили цитирования: «обратная косая черта» (по умолчанию), «одинарные» или «двойные» кавычки.
+# Полезно при использовании оболочек, не поддерживающих обратные косые черты в качестве кавычек
+# механизмы (например: nushell или xonsh).
+;QuotingStyle=backslash
+
+# Включите нечеткое сопоставление для завершения имен файлов/путей и предложений.
+FuzzyMatching=true
+
+# Fuzzy algorithm. Available options are:
+# 1 = faster, not Unicode aware
+# 2 = slower, Unicode aware (note that this second algorithm will
+# nonetheless fallback to the first one whenever the query string
+# does not contain unicode characters, minimizing thus the performance
+# penalty).
+;FuzzyAlgorithm=2
+
+# TAB completion mode: 'standard', 'fzf', 'fnf' or 'smenu'. Defaults
+# to 'fzf' if the binary is found in PATH. Othwerwise, the standard
+# mode is used.
+;TabCompletionMode=
+
+# File previews for TAB completion (fzf mode only). Possible values:
+# 'true', 'false', 'hidden' (enabled, but hidden; toggle with Alt-p).
+FzfPreview=true
+
+# Включение автоматических предложений ???
+AutoSuggestions=true
+
+# Следующие проверки предложений будут выполнены в заказе
+# задается SuggestionStrategy. Доступные проверки:
+# a = Псевдонимы имен
+# c = Завершение пути
+# e = ELN
+# f = Имена файлов в текущем каталоге
+# h = История команд
+# j = База данных прыжков
+# Используйте одно тире (-), чтобы пропустить все эти проверки.
+SuggestionStrategy=eahfjc
+
+# Предложите имена файлов с использованием соответствующего цвета типа файла (установите
+# через файл цветовой схемы).
+;SuggestFiletypeColor=false
+
+# Предложите краткое описание для внутренних команд.
+;SuggestCmdDesc=true
+
+# Включите подсветку синтаксиса.
+;SyntaxHighlighting=true
+
+# Разрешить внешние, shell-команды.
+;ExternalCommands=true
+
+
+#=====================================#
+# 3. КОМАНДЫ                          #
+#=====================================#
+
+# Автоматический вывод списка файлов после изменения текущей директории.
+;AutoLs=true
+
+# Если установлено значение true, то имя команды является именем каталога или
+#, выполняется так, как если бы он был аргументом для 'cd' или
+# команды 'open' соответственно: 'DIR' эквивалентно 'cd DIR' и
+# 'FILE' на 'open FILE'.
+;Autocd=true
+;AutoOpen=true
+
+# Запустите файлы автокоманд (.cfm.in и.cfm.out), найденные в текущем
+# директория. Для получения дополнительной информации обратитесь к странице руководства.
+ReadAutocmdFiles=true
+
+# Запуск в режиме только для чтения (внутренние команды, способные изменять файл
+# отключены). Обратитесь к странице руководства для получения списка затронутых проблем
+# команды.
+;Readonly=false
+
+# Сделайте команду 'r' мусорными файлами вместо того, чтобы удалять их.
+;TrashAsRm=false
+
+# Если установлено значение true, не запрашивайте подтверждения перед удалением файлов.
+;TrashForce=true
+
+# Если установлено значение true, не запрашивайте подтверждение перед удалением файлов
+# с помощью команды 'r'.
+# Примечание: используйте параметр '-f' для включения этой опции для одного
+# команда. Пример: 'r -f ФАЙЛ'.
+;rmForce=false
+
+# Установите команду копирования по умолчанию. Доступные варианты:
+# 0 = 'cp -iRp', 1 = 'cp -Rp', 2 = 'advcp -giRp', 3 = 'advcp -gRp',
+# 4 = 'wcp', and 5 = 'rsync -avP'
+# 2-5 include a progress bar.
+# Only 0 and 2 will prompt before overwrite.
+;cpCmd=0
+
+# Установите команду перемещения по умолчанию. Доступные варианты:
+# 0 = 'mv -i', 1 = 'mv', 2 = 'advmv -gi', and 3 = 'advmv -g'
+# 2 и 3 включают индикатор выполнения.
+# Только 0 и 2 будут запрашивать перед перезаписью.
+;mvCmd=0
+
+# Как команда 'l' должна создавать символические ссылки. Возможные значения:
+# absolute = Сделать цель абсолютным путем
+# relative = Сделать цель относительно местоположения ссылки (например, 'ln -rs')
+# literal = Вообще не разрешать цель (например, 'ln -s')
+;LinkCreationMode=literal
+
+# Выберите открыватель ресурсов для открытия файлов со связанными с ними по умолчанию
+# приложение (например Ranger's rifle или xdg-open). Если не установлено, 
+# используется встроенный открыватель Clifm 'lira'.
+;Opener=
+
+# Используется только при открытии директории через новый экземпляр Clifm (с помощью метода
+# 'x'), эта опция указывает команду, которая будет использоваться для запуска
+# эмулятор терминала для запуска на нем Clifm.
+TerminalCmd="kitty "
+
+# Установите маску создания режима файла. По умолчанию используется значение, унаследованное от
+# оболочка (хотя рекомендуется 077).
+# Эта опция игнорируется в безопасном режиме (umask принудительно установлен на 077).
+;Umask=077
+
+# У нас есть три стратегии поиска: 0 = только glob-only, 1 = regex-only,
+# и 2 = glob-regex. Используется функция быстрого поиска.
+;SearchStrategy=2
+
+# Когда ранг директории в базе данных прыжков падает ниже MinJumpRank, он
+# будет удалено. Если установлено значение 0, каталоги хранятся неограниченное время.
+;MinJumpRank=10
+
+# Когда сумма всех рангов в базе данных прыжков достигает MaxJumpTotalRank,
+# все ранги будут уменьшены с помощью динамического коэффициента, чтобы общая сумма упала
+# снова ниже MaxJumpTotalRank. Те входы, которые упадут ниже MinJumpRank, будут
+# быть удаленным.
+;MaxJumpTotalRank=100000
+
+# Автоматическая очистка базы данных переходов от несуществующих каталогов
+# Обратите внимание, что при этом будут удалены пути, указывающие на размонтированный съемный
+# устройств и удаленных файловых систем.
+PurgeJumpDB=true
+
+# Выводим список выполненных команд в текущей директории (список имеет вид
+# очищено после смены директории).
+;PrintDirCmds=false
+
+
+#=====================================#
+#        4. ЛОГИ И ИСТОРИЯ            #
+#=====================================#
+
+# Отправляйте сообщения об ошибках, предупреждениях и уведомлениях демону уведомлений.
+;DesktopNotifications=false
+
+# Логирование ошибок и предупреждений.
+LogMsgs=true
+# Лог команд, введенных в командной строке.
+LogCmds=true
+# Сохраняйте только последние N строк лог-файла.
+MaxLog=1000
+
+
+# Регулярное выражение, предотвращающее добавление командных строк в метод
+# список истории. Установите эту строку в пустую строку, чтобы отключить фильтры истории.
+;HistIgnore="^[q,Q]$|^quit$|^exit$|^ .*|^#.*|^[0-9]+$|^\.+$|sdwn"
+
+# Ограничьте размер файла истории команд записями MaxHistory.
+MaxHistory=5000
+
+# То же самое, что HistIgnore, но для списка истории каталога.
+;DirhistIgnore=""
+
+# Ограничьте размер файла истории каталога записями MaxDirhist.
+;MaxDirhist=500
+
+
+#=====================================#
+#             5. РАЗНОЕ               #
+#=====================================#
+
+# Включите список с учетом регистра для файлов в текущем каталоге.
+;CaseSensitiveList=false
+
+# Включите поиск с учетом регистра для функции перемычки каталога (через
+# the 'j' command).
+;CaseSensitiveDirJump=false
+
+# Включите автодополнение с учетом регистра для имен файлов.
+;CaseSensitivePathComp=false
+
+# Включите поиск с учетом регистра.
+;CaseSensitiveSearch=false
+
+# При сортировке файлов (по 'версии' или 'имени') пропустите
+# небуквенно-цифровые символы. Пример: '__file' сортируется как 'file'.
+# Это также относится к скрытым файлам: если установлено значение false, '.hidden' будет
+# должен быть указан перед 'afile', в противном случае после 'gfile'.
+SkipNonAlnumPrefix=false
+
+# Установите пользовательский стартовый путь. Если не указано, по умолчанию используется текущее значение
+# рабочий каталог. Если он задан, он переопределяет RestoreLastPath.
+;StartingPath=
+
+# Запустите Clifm в последней посещенной директории (и в последней использованной директории
+# рабочее пространство). Этот параметр переопределяется StartingPath (если он задан).
+;RestoreLastPath=true
+
+# Установите режим редактирования строки чтения: 0 для vi и 1 для emacs (по умолчанию).
+;RlEditMode=1
+
+# Запишите последний посещенный каталог в $XDG_CONFIG_HOME/clifm/.last, чтобы он был
+# позже вызывается соответствующей функцией оболочки при выходе из программы.
+# Чтобы включить эту функцию, обратитесь к странице руководства.
+;CdOnQuit=false
+
+# Поделитесь блоком выбора между разными профилями.
+;ShareSelbox=false
+
+# Распечатайте совет по использованию при запуске.
+Tips=false
+
+# Просто доброе приветственное сообщение при запуске.
+WelcomeMessage=false
+
+# Установите пользовательское приветственное сообщение.
+# Цвета доступны с помощью escape-кодов. Например: "\e[34mДобро пожаловать!\e[0m".
+# Завершающий символ новой строки будет добавлен автоматически.
+; WelcomeMessageStr=""
+
+# Печать экрана с логотипом Clifm при запуске.
+;SplashScreen=false
+
+
+#=====================================#
+# 6. ПСЕВДОНИМЫ                       #
+#=====================================#
+
+# Привяжите '? ' к интерактивному плагину помощи. Выполните 'actions' для вывода файла
+# список доступных плагинов.
+alias ?='ih'
+# Привяжите 'b' к плагину навигации по истории каталогов.
+#alias b='dh'
+# Замените стандартную команду отмены выбора (ds) на плагин fzfdesel.
+alias ds='**'
+# Вы можете использовать этот псевдоним для быстрого перехода к текущему виртуальному каталогу.
+alias vtd='cd $CLIFM_VIRTUAL_DIR'
+
+
+#=====================================#
+# 7. КОМАНДA PROMPT                   #
+#=====================================#
+
+# Напишите ниже команды, которые вы хотите выполнить перед каждым запросом. Бывший:
+#promptcmd /usr/local/share/clifm/plugins/git_status.sh
+#promptcmd date | awk '{print $1", "$2,$3", "$4}'
+
+#=====================================#
+# 8. АВТОКОМАНДЫ                      #
+#=====================================#
+
+# Управляйте настройками Clifm для каждого каталога. Для получения дополнительной информации
+# Обратитесь к странице руководства.
+
+# Удаленные файловые системы работают медленно: давайте ускорим этот процесс, включив подсветку
+# и отключение счетчика файлов.
+autocmd /media/remotes/** lm=1,fc=0
+
+# Просто дружеское напоминание.
+#autocmd ~/important !printf "Keep your fingers outta here!\n" && read -n1
+
+# Много изображений и видео? Запустите плагин предварительного просмотра файлов.
+#autocmd ~/Downloads !/usr/local/share/clifm/plugins/fzfnav.sh
+
+# Используйте цветовую схему nord и отключите скрытые файлы в ~/Документах
+# директория.
+#autocmd ~/Documents/** cs=nord,hf=0
+
+# Я хочу, чтобы файлы в третьем рабочем пространстве отображались в режиме длительного просмотра.
+#autocmd @ws3 lv=1
+
+
+alias eg='env|grep '
+#alias ffp='ffmpeg -i $(xclip -o -sel cli) '
+alias ghgt='git pull '
+alias ghcl='git clone $(xclip -o -sel cli) '
+alias gtadd='git add '
+alias gtc='git commit '
+alias gtgh='git push '
+alias gtrm='git rm '
+alias gtst='git status '
+alias gtres='git restore '
+alias i='ipython '
+alias lsport='netstat -tupln|less'
+alias ncg='sudo nix-collect-garbage '
+#alias ne='nix-env '
+alias nee='nix-env -e '
+alias nei='nix-env -iA '
+alias neq='nix-env -q '
+alias nh='nix-hash --type sha256 --base32 '
+alias nr='sudo nixos-rebuild switch'
+alias nru='sudo nixos-rebuild switch --upgrade-all'
+alias ns='nix-shell '
+alias emc='emacs-client -c '
+alias sdwn='shutdown -h 0'
+alias wgp='wget -Erkp -np -w 1 $(xclip -o -sel cli) '
+#alias yt='yt-dlp '
+alias yt='yt-dlp $(xclip -o -sel cli) '
+alias topdf='pandoc --wrap=none  --pdf-engine=weasyprint -o '
+alias pan='pandoc --wrap=none  --extract-media='  
+#+end_src
+** ranger
+конфиг
+*** rc.conf основной конфиг
+;#+header: :tangle ~/.config/ranger/rc.conf  :mkdirp yes
+#+begin_src text :noweb yes
+<<ranger-conf>>
+#+end_src
+режим отображения и превью
+#+header: :noweb-ref ranger-conf
+#+begin_src text 
+# ============================================== ==================
+# Этот файл содержит команды запуска по умолчанию для рейнджера.
+# Для их изменения рекомендуется создать либо /etc/ranger/rc.conf
+# (для всей системы) или ~/.config/ranger/rc.conf (для каждого пользователя) и добавьте свой собственный
+# команды там.
+#
+# Если вы скопируете туда весь этот файл, возможно, вы захотите установить среду
+# Переменную RANGER_LOAD_DEFAULT_RC установите в FALSE, чтобы избежать ее двойной загрузки.
+#
+# Целью этого файла является определение сочетаний клавиш и настроек.
+# Для запуска более сложного кода Python создайте плагин в «plugins/» или
+# команда в "commands.py".
+#
+# Каждая строка представляет собой команду, которая будет запущена перед пользовательским интерфейсом
+# инициализируется.  В результате вы не можете использовать команды, которые полагаются
+# в пользовательском интерфейсе, например :delete или :mark.
+# ============================================== ==================
+# ===================================================================
+# == Опции
+# ===================================================================
+
+# Какой режим просмотра следует использовать?  Возможные значения:
+# miller: используйте столбцы Miller, которые показывают несколько уровней иерархии.
+# multipane: Midnight-commander, похожий на многопанельный режим, показывает все вкладки рядом
+# друг другу
+
+set viewmode miller
+#set viewmode multipane
+
+# Сколько здесь столбцов и какова их относительная ширина?
+set column_ratios 1,3,4
+
+
+# Ask for a confirmation when running the "delete" command?
+# Valid values are "always", "never", "multiple" (default)
+# With "multiple", ranger will ask only if you delete multiple files at once.
+set confirm_on_delete always
+
+# Использовать нестандартный путь для сценария предварительного просмотра файла?
+# ranger поставляется с scope.sh — сценарием, вызывающим внешние программы (см.
+# README.md для зависимостей) для предварительного просмотра изображений, архивов и т. д.
+set preview_script ~/.config/ranger/scope.sh
+
+# Использовать внешний скрипт предварительного просмотра для простого текста или  изображений?
+set use_preview_script true
+
+# Используйте один из поддерживаемых протоколов предварительного просмотра изображений.
+set preview_images true
+
+# Set the preview image method. Supported methods:
+#
+# * w3m (default):
+#   Preview images in full color with the external command "w3mimgpreview"?
+#   This requires the console web browser "w3m" and a supported terminal.
+#   It has been successfully tested with "xterm" and "urxvt" without tmux.
+#
+# * iterm2:
+#   Preview images in full color using iTerm2 image previews
+#   (http://iterm2.com/images.html). This requires using iTerm2 compiled
+#   with image preview support.
+#
+#   This feature relies on the dimensions of the terminal's font.  By default, a
+#   width of 8 and height of 11 are used.  To use other values, set the options
+#   iterm2_font_width and iterm2_font_height to the desired values.
+#
+# * terminology:
+#   Previews images in full color in the terminology terminal emulator.
+#   Supports a wide variety of formats, even vector graphics like svg.
+#
+# * urxvt:
+#   Preview images in full color using urxvt image backgrounds. This
+#   requires using urxvt compiled with pixbuf support.
+#
+# * urxvt-full:
+#   The same as urxvt but utilizing not only the preview pane but the
+#   whole terminal window.
+#
+# * kitty:
+#   Preview images in full color using kitty image protocol.
+#   Requires python PIL or pillow library.
+#   If ranger does not share the local filesystem with kitty
+#   the transfer method is changed to encode the whole image;
+#   while slower, this allows remote previews,
+#   for example during an ssh session.
+#   Tmux is unsupported.
+#
+# * ueberzug:
+#   Preview images in full color with the external command "ueberzug".
+#   Images are shown by using a child window.
+#   Only for users who run X11 in GNU/Linux.
+
+
+set preview_images_method kitty
+
+# Задержка в секундах перед отображением изображения методом w3m.
+# Увеличьте его в случае повреждения дисплея.
+set w3m_delay 0.02
+
+# Вручную отрегулируйте смещение w3mimg при использовании терминала, которому это необходимо.
+set w3m_offset 0
+
+# Размер шрифта iTerm2 по умолчанию (см.:view_images_method:iterm2)
+set iterm2_font_width 8
+set iterm2_font_height 11
+
+# Использовать символ Юникода "..." для обозначения обрезанных имен файлов?
+set unicode_ellipsis true
+
+# Поддержка BIDI - попробуйте правильно отображать имена файлов на языках с письмом справа налево (иврит, арабский).
+# Требуется пакет pip python-bidi
+set bidi_support false
+
+# Показывать точечные файлы в окне предварительного просмотра закладок?
+set show_hidden_bookmarks true
+
+# Какую цветовую схему использовать?  Эти цветовые схемы доступны по умолчанию:
+# default, jungle, snow, solarized
+set colorscheme default
+
+# Предварительный просмотр файлов в крайнем правом столбце?
+# И свернуть (сжать) последний столбец, если нечего просматривать?
+set preview_files true
+set preview_directories true
+set collapse_preview true
+
+# Переносить длинные строки в превью обычного текста?
+set wrap_plaintext_previews false
+
+
+
+# Нарисуйте строку состояния вверху окна браузера (по умолчанию: внизу)
+set status_bar_on_top false
+
+# Нарисуйте индикатор выполнения в строке состояния, который отображает среднее состояние всех
+# выполняемые в данный момент задачи, которые поддерживают индикаторы выполнения?
+set draw_progress_bar_in_status_bar true
+
+# Нарисовать границы вокруг столбцов? (separators, outline, both, or none)
+# Separators это вертикальные линии между столбцами.
+# Outline рисует рамку вокруг всех столбцов.
+# Оба объединяют два.
+set draw_borders none
+
+# Отображать имя каталога на вкладках?
+set dirname_in_tabs false
+
+# Включить поддержку мыши?
+set mouse_enabled true
+
+# Отображать размер файла в главном столбце или строке состояния?
+set display_size_in_main_column true
+set display_size_in_status_bar true
+
+# Отображать свободное место на диске в строке состояния?
+set display_free_space_in_status_bar true
+
+# Отображать теги файлов во всех столбцах или только в основном столбце?
+set display_tags_in_all_columns true
+
+# Установить заголовок для окна? Обновляет как `WM_NAME`, так и `WM_ICON_NAME`.
+set update_title false
+
+# Установить имя окна tmux/screen на «ranger»?
+set update_tmux_title true
+
+# Сократить заголовок, если он станет длинным?  Число определяет, сколько
+# каталогов отображаются одновременно, 0 отключает эту функцию.
+set shorten_title 3
+
+# Показать имя хоста в заголовке?
+set hostname_in_titlebar false
+
+# Сократите $HOME с помощью ~ в заголовке (первая строка) Ranger?
+set tilde_in_titlebar true
+
+# Старайтесь оставлять как можно больше места между верхней и нижней границей при прокрутке:
+set scroll_offset 8
+
+# Сбрасывать ввод после каждого нажатия клавиши?  (Заметно, когда рейнджер отстает)
+set flushinput true
+
+  
+# Автоматически считать файлы в каталоге еще до их ввода?
+set automatically_count_files true
+
+# Заполнение справа, когда нет предварительного просмотра?
+# Это позволяет вам щелкнуть по пространству, чтобы запустить файл.
+set padding_right true
+
+# Вы можете отобразить «реальный» совокупный размер каталогов, используя
+# команда :get_cumulative_size или набрав «dc».  Размер дорогой
+# вычислить и не будет обновляться автоматически.  Ты можешь выбрать
+# чтобы обновить его автоматически, включив эту опцию:
+set autoupdate_cumulative_size false
+
+# Включение этого имеет смысл для программ чтения с экрана:
+set show_cursor false
+
+
+# Избегайте предварительного просмотра файлов, размер которых превышает этот размер в байтах.
+# Используйте значение 0, чтобы отключить эту функцию.
+set preview_max_size 0
+
+# The key hint lists up to this size have their sublists expanded.
+# Otherwise the submaps are replaced with "...".
+set hint_collapse_threshold 10
+
+# Добавьте выделенный файл по пути в заголовке
+set show_selection_in_titlebar true
+
+# Отключить отображение номеров строк в главном столбце.
+# Possible values: false, absolute, relative.
+set line_numbers false
+
+# Когда line_numbers=relative показывает абсолютный номер строки в
+# текущая строка.
+set relative_current_zero false
+
+# Начинаем номера строк с 1 вместо 0
+set one_indexed false
+
+# Включить обтекание прокрутки - перемещение вниз по последнему элементу будет оборачиваться до
+# верх и наоборот.
+set wrap_scroll false
+
+# Открывать все изображения в этом каталоге при запуске определенных программ просмотра изображений.
+# типа feh или sxiv?  Вы по-прежнему можете открывать выбранные файлы, отмечая их.
+set open_all_images true
+
+
+# Усекать длинные сообщения фиксации до этой длины, когда они отображаются в строке состояния.
+set vcs_msg_length 50
+
+# Включите это, если комбинации клавиш с клавишей Alt вам не подходят.
+# (Especially on xterm)
+set xterm_alt_key false
+
+# resolution of 100ms.  Lower delay reduces lag between directory updates but
+# increases CPU load.
+set idle_delay 2000
+
+#+end_src
+Скрытые файлы
+#+header: :noweb-ref ranger-conf
+#+begin_src text 
+# Какие файлы следует скрыть? (регулярное выражение)
+set hidden_filter ^\.|\.(?:pyc|pyo|bak|swp)$|^lost\+found$|^__(py)?cache__$|~$|^#.*#$
+
+# Показать скрытые файлы? Вы можете переключить это, набрав «zh»
+set show_hidden false
+#+end_src
+Системы контроля версий
+#+header: :noweb-ref ranger-conf
+#+begin_src text 
+# Помните о системах контроля версий и отображайте информацию.
+set vcs_aware false
+
+# Состояние четырех бэкэндов git, hg, bzr, svn. Возможные состояния:
+# disabled, local (only show local info), enabled (show local and remote information).
+set vcs_backend_git enabled
+set vcs_backend_hg disabled
+set vcs_backend_bzr disabled
+set vcs_backend_svn disabled
+#+end_src
+История, закладки и cd
+#+header: :noweb-ref ranger-conf
+#+begin_src text 
+# Сохранить историю консоли при выходе?
+set save_console_history true
+
+# Сколько изменений каталога или консольных команд следует хранить в истории?
+set max_history_size 50
+set max_console_history_size 200
+
+# Сохранять закладки (используемые с mX и `X) мгновенно?
+# Это помогает синхронизировать закладки между несколькими рейнджерами
+# экземпляров, но приводит к *небольшому* снижению производительности.
+# Если установлено значение false, закладки сохраняются при выходе из рейнджера.
+set autosave_bookmarks true
+
+# Сохраняем закладку "`" на диск.  Это можно использовать для переключения на последний
+# каталог, набрав «``».
+set save_backtick_bookmark true
+
+# Включать ли закладки в команду cd
+set cd_bookmarks true
+
+# Изменяет чувствительность к регистру для завершения вкладки команды cd
+set cd_tab_case sensitive
+
+# Используйте нечеткое завершение табуляции с помощью команды «cd». Например,
+# ":cd /u/lo/b<tab>" expands to ":cd /usr/local/bin".
+set cd_tab_fuzzy true
+#+end_src
+Сортировка, вкладки фильтры метаданные
+#+header: :noweb-ref ranger-conf
+#+begin_src text 
+# Один из: size, natural, basename, atime, ctime, mtime, type, random
+set sort natural
+
+# Дополнительные возможности сортировки
+set sort_reverse false
+set sort_case_insensitive true
+set sort_directories_first true
+set sort_unicode false
+
+# Когда модуль менеджера метаданных ищет метаданные, должен ли он искать только
+# файл ".metadata.json" в текущем каталоге или выполните глубокий поиск и
+# также проверить все каталоги выше текущего?
+set metadata_deep_search false
+
+# Очистить все существующие фильтры при выходе из каталога
+set clear_filters_on_dir_change false
+
+# Сохраняем вкладки при выходе
+set save_tabs_on_exit true
+
+#+end_src
+Локальные параметры
+#+header: :noweb-ref ranger-conf
+#+begin_src text 
+
+# ===================================================================
+# == Локальные параметры
+# ===================================================================
+# Вы можете установить локальные параметры, которые влияют только на один каталог.
+
+# Examples:
+setlocal path=~/Загрузки sort mtime
+
+#+end_src
+Алиасы
+#+header: :noweb-ref ranger-conf
+#+begin_src text 
+
+
+# ===================================================================
+# == Псевдонимы команд в консоли
+# ===================================================================
+
+alias e     edit
+alias q     quit
+alias q!    quit!
+alias qa    quitall
+alias qa!   quitall!
+alias qall  quitall
+alias qall! quitall!
+alias setl  setlocal
+
+alias filter     scout -prts
+alias find       scout -aets
+alias mark       scout -mr
+alias unmark     scout -Mr
+alias search     scout -rs
+alias search_inc scout -rts
+alias travel     scout -aefklst
+
+# ===================================================================
+# == Определить клавиши для браузера
+# ===================================================================
+#+end_src
+Клавиши основного окна
+Базовые клавиши
+#+header: :noweb-ref ranger-conf
+#+begin_src text 
+
+  # Базовый
+  map     Q quitall
+  map     q quit
+  copymap Q ZZ ZQ
+
+  map R     reload_cwd
+  map F     set freeze_files!
+  map <C-r> reset
+  map <C-l> redraw_window
+  map <C-c> abort
+  map <esc> change_mode normal
+  map ~ set viewmode!
+
+  map i display_file
+  map <A-j> scroll_preview 1
+  map <A-k> scroll_preview -1
+  map <S-Down> scroll_preview 1
+  map <S-Up> scroll_preview -1
+
+  map ? help
+  map W display_log
+  map w taskview_open
+  map S shell $SHELL
+
+  map :  console
+  map ;  console
+  map !  console shell%space
+  map @  console -p6 shell  %%s
+  map #  console shell -p%space
+  map s  console shell%space
+  map ]  chain draw_possible_programs; console open_with%space
+  map f  console find%space
+  map cd console cd%space
+#  map r bulkrename
+  map <C-p> chain console; eval fm.ui.console.history_move(-1)
+#+end_src
+Управление строкой состояния
+#+header: :noweb-ref ranger-conf
+#+begin_src text 
+
+# Изменить режим линии
+map Mf linemode filename
+map Mi linemode fileinfo
+map Mm linemode mtime
+map Mh linemode humanreadablemtime
+map Mp linemode permissions
+map Ms linemode sizemtime
+map MH linemode sizehumanreadablemtime
+map Mt linemode metatitle
+
+#+end_src
+Отметка файлов
+#+header: :noweb-ref ranger-conf
+#+begin_src text 
+
+# Маркировка/маркировка
+map t       tag_toggle
+map ut      tag_remove
+map "<any>  tag_toggle tag=%any
+map <Space> mark_files toggle=True
+map v       mark_files all=True toggle=True
+map uv      mark_files all=True val=False
+map V       toggle_visual_mode
+map uV      toggle_visual_mode reverse=True
+#+end_src
+Привязки клавиш как в других програмах
+#+header: :noweb-ref ranger-conf
+#+begin_src text 
+
+# Для ностальгирующих: привязки Midnight Commander
+map <F1> help
+map <F2> rename_append
+map <F3> display_file
+map <F4> edit
+map <F5> copy
+map <F6> cut
+map <F7> console mkdir%space
+map <F8> console delete
+map <F8> console trash
+map <F10> exit
+
+# Если вы работаете на клавиатуре с раскладкой дворжака
+map <UP>       move up=1
+map <DOWN>     move down=1
+map <LEFT>     move left=1
+map <RIGHT>    move right=1
+map <HOME>     move to=0
+map <END>      move to=-1
+map <PAGEDOWN> move down=1   pages=True
+map <PAGEUP>   move up=1     pages=True
+map <CR>       move right=1
+#map <DELETE>   console delete
+map <INSERT>   console touch%space
+
+# VIM-подобный
+copymap <UP>       k
+copymap <DOWN>     j
+copymap <LEFT>     h
+copymap <RIGHT>    l
+copymap <HOME>     gg
+copymap <END>      G
+copymap <PAGEDOWN> <C-F>
+copymap <PAGEUP>   <C-B>
+
+map J  move down=0.5  pages=True
+map K  move up=0.5    pages=True
+copymap J <C-D>
+copymap K <C-U>
+#+end_src
+Быстрое перемещение по каталогам
+#+header: :noweb-ref ranger-conf
+#+begin_src text 
+
+# Прыгаем вокруг
+map H     history_go -1
+map L     history_go 1
+map ]     move_parent 1
+map [     move_parent -1
+map }     traverse
+map {     traverse_backwards
+map )     jump_non
+
+map gh cd ~
+map ge cd /etc
+map gu cd /usr
+map gd cd /dev
+map gl cd -r .
+map gL cd -r %f
+map go cd /opt
+map gv cd /var
+map gm cd /media
+map gi eval fm.cd('/run/media/' + os.getenv('USER'))
+map gM cd /mnt
+map gs cd /srv
+map gp cd /tmp
+map gr cd /
+map gR eval fm.cd(ranger.RANGERDIR)
+map g/ cd /
+map g? cd /usr/share/doc/ranger
+#+end_src
+Внешние программы
+#+header: :noweb-ref ranger-conf
+#+begin_src text 
+
+# Внешние программы
+map e  edit
+map du shell -p du --max-depth=1 -h --apparent-size
+map dU shell -p du --max-depth=1 -h --apparent-size | sort -rh
+map yp yank path
+map yd yank dir
+map yn yank name
+map y. yank name_without_extension
+
+#+end_src
+Операции з файловой системой
+#+header: :noweb-ref ranger-conf
+#+begin_src text 
+
+# Операции с файловой системой
+map =  chmod
+# Сгенерируйте все привязки chmod с помощью Python:
+eval for arg in "rwxXst": cmd("map +u{0} shell -f chmod u+{0} %s".format(arg))
+eval for arg in "rwxXst": cmd("map +g{0} shell -f chmod g+{0} %s".format(arg))
+eval for arg in "rwxXst": cmd("map +o{0} shell -f chmod o+{0} %s".format(arg))
+eval for arg in "rwxXst": cmd("map +a{0} shell -f chmod a+{0} %s".format(arg))
+eval for arg in "rwxXst": cmd("map +{0}  shell -f chmod u+{0} %s".format(arg))
+
+eval for arg in "rwxXst": cmd("map -u{0} shell -f chmod u-{0} %s".format(arg))
+eval for arg in "rwxXst": cmd("map -g{0} shell -f chmod g-{0} %s".format(arg))
+eval for arg in "rwxXst": cmd("map -o{0} shell -f chmod o-{0} %s".format(arg))
+eval for arg in "rwxXst": cmd("map -a{0} shell -f chmod a-{0} %s".format(arg))
+eval for arg in "rwxXst": cmd("map -{0}  shell -f chmod u-{0} %s".format(arg))
+
+
+map cw console rename%space
+map a  rename_append
+map A  eval fm.open_console('rename ' + fm.thisfile.relative_path.replace("%", "%%"))
+map I  eval fm.open_console('rename ' + fm.thisfile.relative_path.replace("%", "%%"), position=7)
+
+map pp paste
+map po paste overwrite=True
+map pP paste append=True
+map pO paste overwrite=True append=True
+map pl paste_symlink relative=False
+map pL paste_symlink relative=True
+map phl paste_hardlink
+map pht paste_hardlinked_subtree
+map pd console paste dest=
+map p`<any> paste dest=%any_path
+map p'<any> paste dest=%any_path
+
+map dD console delete
+map dT console trash
+map x delete
+map X trash
+map dd cut
+map ud uncut
+map da cut mode=add
+map dr cut mode=remove
+map dt cut mode=toggle
+
+map yy copy
+map uy uncut
+map ya copy mode=add
+map yr copy mode=remove
+map yt copy mode=toggle
+#+end_src
+Временные обходные пути
+#+header: :noweb-ref ranger-conf
+#+begin_src text 
+# Временные обходные пути
+map dgg eval fm.cut(dirarg=dict(to=0), narg=quantifier)
+map dG  eval fm.cut(dirarg=dict(to=-1), narg=quantifier)
+map dj  eval fm.cut(dirarg=dict(down=1), narg=quantifier)
+map dk  eval fm.cut(dirarg=dict(up=1), narg=quantifier)
+map ygg eval fm.copy(dirarg=dict(to=0), narg=quantifier)
+map yG  eval fm.copy(dirarg=dict(to=-1), narg=quantifier)
+map yj  eval fm.copy(dirarg=dict(down=1), narg=quantifier)
+map yk  eval fm.copy(dirarg=dict(up=1), narg=quantifier)
+#+end_src
+Поиск
+#+header: :noweb-ref ranger-conf
+#+begin_src text 
+#  поиск
+map /  console search%space
+map n  search_next
+map N  search_next forward=False
+map ct search_next order=tag
+map cs search_next order=size
+map ci search_next order=mimetype
+map cc search_next order=ctime
+map cm search_next order=mtime
+map ca search_next order=atime
+#+end_src
+Вкладки
+#+header: :noweb-ref ranger-conf
+#+begin_src text 
+
+# Вкладки
+map <C-n>     tab_new
+map <C-w>     tab_close
+map <TAB>     tab_move 1
+map <S-TAB>   tab_move -1
+map <A-Right> tab_move 1
+map <A-Left>  tab_move -1
+map gt        tab_move 1
+map gT        tab_move -1
+map gn        tab_new
+map gc        tab_close
+map uq        tab_restore
+map <a-1>     tab_open 1
+map <a-2>     tab_open 2
+map <a-3>     tab_open 3
+map <a-4>     tab_open 4
+map <a-5>     tab_open 5
+map <a-6>     tab_open 6
+map <a-7>     tab_open 7
+map <a-8>     tab_open 8
+map <a-9>     tab_open 9
+map <a-r>     tab_shift 1
+map <a-l>     tab_shift -1
+#+end_src
+Сортировка
+#+header: :noweb-ref ranger-conf
+#+begin_src text 
+
+# Сортировка
+map or set sort_reverse!
+map oz set sort=random
+map os chain set sort=size;      set sort_reverse=False
+map ob chain set sort=basename;  set sort_reverse=False
+map on chain set sort=natural;   set sort_reverse=False
+map om chain set sort=mtime;     set sort_reverse=False
+map oc chain set sort=ctime;     set sort_reverse=False
+map oa chain set sort=atime;     set sort_reverse=False
+map ot chain set sort=type;      set sort_reverse=False
+map oe chain set sort=extension; set sort_reverse=False
+
+map oS chain set sort=size;      set sort_reverse=True
+map oB chain set sort=basename;  set sort_reverse=True
+map oN chain set sort=natural;   set sort_reverse=True
+map oM chain set sort=mtime;     set sort_reverse=True
+map oC chain set sort=ctime;     set sort_reverse=True
+map oA chain set sort=atime;     set sort_reverse=True
+map oT chain set sort=type;      set sort_reverse=True
+map oE chain set sort=extension; set sort_reverse=True
+
+map dc get_cumulative_size
+#+end_src
+Настройки (изменение отображения и поведения)
+#+header: :noweb-ref ranger-conf
+#+begin_src text 
+# Настройки
+map zc    set collapse_preview!
+map zd    set sort_directories_first!
+map zh    set show_hidden!
+map <C-h> set show_hidden!
+copymap <C-h> <backspace>
+copymap <backspace> <backspace2>
+map zI    set flushinput!
+map zi    set preview_images!
+map zm    set mouse_enabled!
+map zp    set preview_files!
+map zP    set preview_directories!
+map zs    set sort_case_insensitive!
+map zu    set autoupdate_cumulative_size!
+map zv    set use_preview_script!
+map zf    console filter%space
+copymap zf zz
+#+end_src
+
+Стек фильтров
+#+header: :noweb-ref ranger-conf
+#+begin_src text 
+
+# Стек фильтров
+map .d filter_stack add type d
+map .f filter_stack add type f
+map .l filter_stack add type l
+map .m console filter_stack add mime%space
+map .n console filter_stack add name%space
+map .# console filter_stack add hash%space
+map ." filter_stack add duplicate
+map .' filter_stack add unique
+map .| filter_stack add or
+map .& filter_stack add and
+map .! filter_stack add not
+map .r filter_stack rotate
+map .c filter_stack clear
+map .* filter_stack decompose
+map .p filter_stack pop
+map .. filter_stack show
+
+#+end_src
+Закладки
+#+header: :noweb-ref ranger-conf
+#+begin_src text 
+
+# Закладки
+map `<any>  enter_bookmark %any
+map '<any>  enter_bookmark %any
+map m<any>  set_bookmark %any
+map um<any> unset_bookmark %any
+
+map m<bg>   draw_bookmarks
+copymap m<bg>  um<bg> `<bg> '<bg>
+#+end_src
+
+Клавиши консоли
+#+header: :noweb-ref ranger-conf
+#+begin_src text 
+
+# ===================================================================
+# == Определить клавиши для консоли
+# ===================================================================
+# Примечание. Несопоставленные клавиши передаются непосредственно в консоль.
+
+# Basic
+cmap <tab>   eval fm.ui.console.tab()
+cmap <s-tab> eval fm.ui.console.tab(-1)
+cmap <ESC>   eval fm.ui.console.close()
+cmap <CR>    eval fm.ui.console.execute()
+cmap <C-l>   redraw_window
+
+copycmap <ESC> <C-c>
+copycmap <CR>  <C-j>
+
+# Двигайтесь
+cmap <up>    eval fm.ui.console.history_move(-1)
+cmap <down>  eval fm.ui.console.history_move(1)
+cmap <left>  eval fm.ui.console.move(left=1)
+cmap <right> eval fm.ui.console.move(right=1)
+cmap <home>  eval fm.ui.console.move(right=0, absolute=True)
+cmap <end>   eval fm.ui.console.move(right=-1, absolute=True)
+cmap <a-b> eval fm.ui.console.move_word(left=1)
+cmap <a-f> eval fm.ui.console.move_word(right=1)
+
+copycmap <a-b> <a-left>
+copycmap <a-f> <a-right>
+
+# Редактирование строк
+cmap <backspace>  eval fm.ui.console.delete(-1)
+cmap <delete>     eval fm.ui.console.delete(0)
+cmap <C-w>        eval fm.ui.console.delete_word()
+cmap <A-d>        eval fm.ui.console.delete_word(backward=False)
+cmap <C-k>        eval fm.ui.console.delete_rest(1)
+cmap <C-u>        eval fm.ui.console.delete_rest(-1)
+cmap <C-y>        eval fm.ui.console.paste()
+
+# И, конечно же, способ emacs
+copycmap <ESC>       <C-g>
+copycmap <up>        <C-p>
+copycmap <down>      <C-n>
+copycmap <left>      <C-b>
+copycmap <right>     <C-f>
+copycmap <home>      <C-a>
+copycmap <end>       <C-e>
+copycmap <delete>    <C-d>
+copycmap <backspace> <C-h>
+
+# Примечание. Существует несколько способов выражения символов возврата.  <backspace> (код 263)
+# и <backspace2> (код 127).  Чтобы быть уверенным, используйте оба.
+copycmap <backspace> <backspace2>
+
+# Это специальное выражение позволяет вводить цифры:
+cmap <allow_quantifiers> false
+#+end_src
+Клавиши просмотрщика
+#+header: :noweb-ref ranger-conf
+#+begin_src text 
+
+# ===================================================================
+# == Сочетания клавиш пейджера
+# ===================================================================
+
+# Movement
+pmap  <down>      pager_move  down=1
+pmap  <up>        pager_move  up=1
+pmap  <left>      pager_move  left=4
+pmap  <right>     pager_move  right=4
+pmap  <home>      pager_move  to=0
+pmap  <end>       pager_move  to=-1
+pmap  <pagedown>  pager_move  down=1.0  pages=True
+pmap  <pageup>    pager_move  up=1.0    pages=True
+pmap  <C-d>       pager_move  down=0.5  pages=True
+pmap  <C-u>       pager_move  up=0.5    pages=True
+
+copypmap <UP>       k  <C-p>
+copypmap <DOWN>     j  <C-n> <CR>
+copypmap <LEFT>     h
+copypmap <RIGHT>    l
+copypmap <HOME>     g
+copypmap <END>      G
+copypmap <C-d>      d
+copypmap <C-u>      u
+copypmap <PAGEDOWN> n  f  <C-F>  <Space>
+copypmap <PAGEUP>   p  b  <C-B>
+
+# Базовый
+pmap     <C-l> redraw_window
+pmap     <ESC> pager_close
+copypmap <ESC> q Q i <F3>
+pmap E      edit_file
+
+#+end_src
+Клавиши окна задач
+#+header: :noweb-ref ranger-conf
+#+begin_src text 
+
+# ===================================================================
+# == Сочетания клавиш представления задач
+# ===================================================================
+
+# Movement
+tmap <up>        taskview_move up=1
+tmap <down>      taskview_move down=1
+tmap <home>      taskview_move to=0
+tmap <end>       taskview_move to=-1
+tmap <pagedown>  taskview_move down=1.0  pages=True
+tmap <pageup>    taskview_move up=1.0    pages=True
+tmap <C-d>       taskview_move down=0.5  pages=True
+tmap <C-u>       taskview_move up=0.5    pages=True
+
+copytmap <UP>       k  <C-p>
+copytmap <DOWN>     j  <C-n> <CR>
+copytmap <HOME>     g
+copytmap <END>      G
+copytmap <C-u>      u
+copytmap <PAGEDOWN> n  f  <C-F>  <Space>
+copytmap <PAGEUP>   p  b  <C-B>
+
+# Изменение приоритета и удаление задач
+tmap J          eval -q fm.ui.taskview.task_move(-1)
+tmap K          eval -q fm.ui.taskview.task_move(0)
+tmap dd         eval -q fm.ui.taskview.task_remove()
+tmap <pagedown> eval -q fm.ui.taskview.task_move(-1)
+tmap <pageup>   eval -q fm.ui.taskview.task_move(0)
+tmap <delete>   eval -q fm.ui.taskview.task_remove()
+
+# Базовый
+tmap <C-l> redraw_window
+tmap <ESC> taskview_close
+copytmap <ESC> q Q w <C-c>
+#+end_src
+*** rifle.conf запуск програм
+#+begin_src text :tangle  ~/.config/ranger/rifle.conf :mkdirp yes
+# vim: ft=cfg
+#
+# Это файл конфигурации riffle, исполнителя/открывателя файлов рейнджера.
+# Каждая строка состоит из условий и команды.  Для каждой строки условия
+# проверяются, и если они выполняются, выполняется соответствующая команда.#
+# Syntax:
+#   <condition1> , <condition2> , ... = command
+#
+# The command can contain these environment variables:
+#   $1-$9 | The n-th selected file
+#   $@    | All selected files
+#
+# Если вы используете специальную команду «ask», riffle спросит вас, какую программу запустить.
+#
+# Префикс условия с помощью "!" сведет на нет его результат.
+# В настоящее время поддерживаются следующие условия:
+#   match <regexp> | Регулярное выражение соответствует $1
+#   ext <regexp>   | Регулярное выражение соответствует расширению $1.
+#   mime <regexp>  | Регулярное выражение соответствует типу MIME $1.
+#   name <regexp>  | Регулярное выражение соответствует базовому имени $1.
+#   path <regexp>  | Регулярное выражение соответствует абсолютному пути к $1.
+#   has <program>  | Программа установлена ​​(т.е. находится в $PATH)
+#   env <variable> | Переменная среды "variable" не пуста.
+#   file           | $1 это файл
+#   directory      | $1 это каталог
+#   number <n>     | измените номер этой команды на n
+#   terminal       | stdin, stderr и stdout подключены к терминалу
+#   X              | Доступна графическая среда (darwin, Xorg или Wayland).
+#
+# Существуют также псевдоусловия, имеющие «побочный эффект»:
+#   flag <flags>  | Измените способ запуска программы. См. ниже.
+#   label <label> | Присвойте команде метку или имя, чтобы она могла
+#                 | начать с :open_with <label> в Ranger
+#                 | или `rifle -p <label>` в автономном исполняемом файле.
+#   else          | Всегда правда.
+#
+# Флаги — это отдельные символы, которые слегка преобразуют команду:
+#   f | Форкните программу, заставьте ее работать в фоновом режиме.
+#     |   New command = setsid $command >& /dev/null &
+#   r | Выполните команду с правами root
+#     |   New command = sudo $command
+#   t | Запустите программу в новом терминале.  Если $TERMCMD не определен,
+#     | riffle попытается извлечь его из $TERM.
+#     |   New command = $TERMCMD -e $command
+# Примечание: «Новая команда» служит лишь иллюстрацией, точной
+# реализация может отличаться.
+# Примечание: при использовании riffle в рейнджере есть дополнительный флаг «c» для
+# запускаем только текущий файл, даже если вы отметили несколько файлов.
+
+#-------------------------------------------
+# веб-сайты
+#-------------------------------------------
+# Редко устанавливаемые браузеры получают более высокий приоритет; Предполагается, что если вы
+# установите редкий браузер, вы наверняка им пользуетесь.  Firefox/konqueror/w3m на
+# другие часто устанавливаются только в качестве резервных браузеров.
+ext x?html?, has surf,             X, flag f = surf -- file://"$1"
+ext x?html?, has vimprobable,      X, flag f = vimprobable -- "$@"
+ext x?html?, has vimprobable2,     X, flag f = vimprobable2 -- "$@"
+ext x?html?, has qutebrowser,      X, flag f = qutebrowser -- "$@"
+ext x?html?, has dwb,              X, flag f = dwb -- "$@"
+ext x?html?, has jumanji,          X, flag f = jumanji -- "$@"
+ext x?html?, has luakit,           X, flag f = luakit -- "$@"
+ext x?html?, has uzbl,             X, flag f = uzbl -- "$@"
+ext x?html?, has uzbl-tabbed,      X, flag f = uzbl-tabbed -- "$@"
+ext x?html?, has uzbl-browser,     X, flag f = uzbl-browser -- "$@"
+ext x?html?, has uzbl-core,        X, flag f = uzbl-core -- "$@"
+ext x?html?, has midori,           X, flag f = midori -- "$@"
+ext x?html?, has opera,            X, flag f = opera -- "$@"
+ext x?html?, has firefox,          X, flag f = firefox -- "$@"
+ext x?html?, has seamonkey,        X, flag f = seamonkey -- "$@"
+ext x?html?, has iceweasel,        X, flag f = iceweasel -- "$@"
+ext x?html?, has chromium-browser, X, flag f = chromium-browser -- "$@"
+ext x?html?, has chromium,         X, flag f = chromium -- "$@"
+ext x?html?, has google-chrome,    X, flag f = google-chrome -- "$@"
+ext x?html?, has epiphany,         X, flag f = epiphany -- "$@"
+ext x?html?, has konqueror,        X, flag f = konqueror -- "$@"
+ext x?html?, has elinks,            terminal = elinks "$@"
+ext x?html?, has links2,            terminal = links2 "$@"
+ext x?html?, has links,             terminal = links "$@"
+ext x?html?, has lynx,              terminal = lynx -- "$@"
+ext x?html?, has w3m,               terminal = w3m "$@"
+
+#-------------------------------------------
+# Разное
+#-------------------------------------------
+# Определите «редактор» для текстовых файлов в качестве первого действия
+ext org,   = emacsclient -c  -- "$@"
+mime ^text,  label editor = ${VISUAL:-$EDITOR} -- "$@"
+mime ^text,  label pager  = "$PAGER" -- "$@"
+!mime ^text, label editor, ext xml|json|csv|tex|py|pl|rb|js|sh|php = ${VISUAL:-$EDITOR} -- "$@"
+!mime ^text, label pager,  ext xml|json|csv|tex|py|pl|rb|js|sh|php = "$PAGER" -- "$@"
+
+ext 1                         = man "$1"
+ext s[wmf]c, has zsnes, X     = zsnes "$1"
+ext s[wmf]c, has snes9x-gtk,X = snes9x-gtk "$1"
+ext nes, has fceux, X         = fceux "$1"
+ext exe                       = wine "$1"
+name ^[mM]akefile$            = make
+
+
+ext torrent, X, flag t = aria2c -c -- "$@"
+
+
+
+#--------------------------------------------
+# Скрипты
+#-------------------------------------------
+ext py  = python -- "$1"
+ext pl  = perl -- "$1"
+ext rb  = ruby -- "$1"
+ext js  = node -- "$1"
+ext sh  = sh -- "$1"
+ext php = php -- "$1"
+
+#--------------------------------------------
+# Аудио без X
+#-------------------------------------------
+mime ^audio|ogg$, terminal, has mpv      = mpv -- "$@"
+mime ^audio|ogg$, terminal, has mplayer2 = mplayer2 -- "$@"
+mime ^audio|ogg$, terminal, has mplayer  = mplayer -- "$@"
+ext midi?,        terminal, has wildmidi = wildmidi -- "$@"
+
+#--------------------------------------------
+# Видео/аудио с графическим интерфейсом
+#-------------------------------------------
+mime ^video|audio, has gmplayer, X, flag f = gmplayer -- "$@"
+mime ^video|audio, has smplayer, X, flag f = smplayer "$@"
+mime ^video,       has mpv,      X, flag f = mpv -- "$@"
+mime ^video,       has mpv,      X, flag f = mpv --fs -- "$@"
+mime ^video,       has mplayer2, X, flag f = mplayer2 -- "$@"
+mime ^video,       has mplayer2, X, flag f = mplayer2 -fs -- "$@"
+mime ^video,       has mplayer,  X, flag f = mplayer -- "$@"
+mime ^video,       has mplayer,  X, flag f = mplayer -fs -- "$@"
+mime ^video|audio, has vlc,      X, flag f = vlc -- "$@"
+mime ^video|audio, has totem,    X, flag f = totem -- "$@"
+mime ^video|audio, has totem,    X, flag f = totem --fullscreen -- "$@"
+
+#--------------------------------------------
+# Видео без X
+#-------------------------------------------
+mime ^video, terminal, !X, has mpv       = mpv -- "$@"
+mime ^video, terminal, !X, has mplayer2  = mplayer2 -- "$@"
+mime ^video, terminal, !X, has mplayer   = mplayer -- "$@"
+
+
+#-------------------------------------------
+# Документы
+#-------------------------------------------
+
+ext pdf, has zathura,  X, flag f = zathura -- "$@"
+ext pdf, has llpp,     X, flag f = llpp "$@"
+ext pdf, has mupdf,    X, flag f = mupdf "$@"
+ext pdf, has mupdf-x11,X, flag f = mupdf-x11 "$@"
+ext pdf, has apvlv,    X, flag f = apvlv -- "$@"
+ext pdf, has xpdf,     X, flag f = xpdf -- "$@"
+ext pdf, has evince,   X, flag f = evince -- "$@"
+ext pdf, has atril,    X, flag f = atril -- "$@"
+ext pdf, has okular,   X, flag f = okular -- "$@"
+ext pdf, has epdfview, X, flag f = epdfview -- "$@"
+ext pdf, has qpdfview, X, flag f = qpdfview "$@"
+ext pdf, has open,     X, flag f = open "$@"
+
+ext docx?, has catdoc,       terminal = catdoc -- "$@" | "$PAGER"
+
+ext                        sxc|xlsx?|xlt|xlw|gnm|gnumeric, has gnumeric,    X, flag f = gnumeric -- "$@"
+ext                        sxc|xlsx?|xlt|xlw|gnm|gnumeric, has kspread,     X, flag f = kspread -- "$@"
+ext pptx?|od[dfgpst]|docx?|sxc|xlsx?|xlt|xlw|gnm|gnumeric, has libreoffice, X, flag f = libreoffice "$@"
+ext pptx?|od[dfgpst]|docx?|sxc|xlsx?|xlt|xlw|gnm|gnumeric, has soffice,     X, flag f = soffice "$@"
+ext pptx?|od[dfgpst]|docx?|sxc|xlsx?|xlt|xlw|gnm|gnumeric, has ooffice,     X, flag f = ooffice "$@"
+
+ext djvu, has zathura,X, flag f = zathura -- "$@"
+ext djvu, has evince, X, flag f = evince -- "$@"
+ext djvu, has atril,  X, flag f = atril -- "$@"
+ext djvu, has djview, X, flag f = djview -- "$@"
+
+ext epub, has zathura,      X, flag f = zathura -- "$@"
+ext epub, has ebook-viewer, X, flag f = ebook-viewer -- "$@"
+ext epub, has mupdf,        X, flag f = mupdf -- "$@"
+ext mobi, has ebook-viewer, X, flag f = ebook-viewer -- "$@"
+
+ext cbr,  has zathura,      X, flag f = zathura -- "$@"
+ext cbz,  has zathura,      X, flag f = zathura -- "$@"
+
+#-------------------------------------------
+# Images
+#-------------------------------------------
+mime ^image/svg, has inkscape, X, flag f = inkscape -- "$@"
+mime ^image/svg, has display,  X, flag f = display -- "$@"
+
+mime ^image, has imv,       X, flag f = imv -- "$@"
+mime ^image, has pqiv,      X, flag f = pqiv -- "$@"
+mime ^image, has sxiv,      X, flag f = sxiv -- "$@"
+mime ^image, has feh,       X, flag f = feh -- "$@"
+mime ^image, has mirage,    X, flag f = mirage -- "$@"
+mime ^image, has ristretto, X, flag f = ristretto "$@"
+mime ^image, has eog,       X, flag f = eog -- "$@"
+mime ^image, has eom,       X, flag f = eom -- "$@"
+mime ^image, has nomacs,    X, flag f = nomacs -- "$@"
+mime ^image, has geeqie,    X, flag f = geeqie -- "$@"
+mime ^image, has gpicview,  X, flag f = gpicview -- "$@"
+mime ^image, has gwenview,  X, flag f = gwenview -- "$@"
+mime ^image, has gimp,      X, flag f = gimp -- "$@"
+ext xcf,                    X, flag f = gimp -- "$@"
+
+#-------------------------------------------
+# Архивы
+#-------------------------------------------
+
+# избегайте запроса пароля, указывая пустой пароль
+ext 7z, has 7z = 7z -p l "$@" | "$PAGER"
+# Для этого требуется инструмент
+ext ace|ar|arc|bz2?|cab|cpio|cpt|deb|dgc|dmg|gz,     has atool = atool --list --each -- "$@" | "$PAGER"
+ext iso|jar|msi|pkg|rar|shar|tar|tgz|xar|xpi|xz|zip, has atool = atool --list --each -- "$@" | "$PAGER"
+ext 7z|ace|ar|arc|bz2?|cab|cpio|cpt|deb|dgc|dmg|gz,  has atool = atool --extract --each -- "$@"
+ext iso|jar|msi|pkg|rar|shar|tar|tgz|xar|xpi|xz|zip, has atool = atool --extract --each -- "$@"
+
+# Листинг и извлечение архивов без инструмента:
+ext tar|gz|bz2|xz, has tar = tar vvtf "$1" | "$PAGER"
+ext tar|gz|bz2|xz, has tar = for file in "$@"; do tar vvxf "$file"; done
+ext bz2, has bzip2 = for file in "$@"; do bzip2 -dk "$file"; done
+ext zip, has unzip = unzip -l "$1" | less
+ext zip, has unzip = for file in "$@"; do unzip -d "${file%.*}" "$file"; done
+ext ace, has unace = unace l "$1" | less
+ext ace, has unace = for file in "$@"; do unace e "$file"; done
+ext rar, has unrar = unrar l "$1" | less
+ext rar, has unrar = for file in "$@"; do unrar x "$file"; done
+
+#-------------------------------------------
+# Шрифты
+#-------------------------------------------
+mime ^font, has fontforge, X, flag f = fontforge "$@"
+
+#-------------------------------------------
+# Флаг t резервных терминалов
+#-------------------------------------------
+# Редко устанавливаемые эмуляторы терминала получают более высокий приоритет; Предполагается, что
+# если вы устанавливаете редкий эмулятор терминала, вы, вероятно, используете его.
+# gnome-terminal/konsole/xterm, с другой стороны, часто устанавливаются как часть
+# среду рабочего стола или резервные эмуляторы терминала.
+mime ^ranger/x-terminal-emulator, has terminology = terminology -e "$@"
+mime ^ranger/x-terminal-emulator, has kitty = kitty -- "$@"
+mime ^ranger/x-terminal-emulator, has alacritty = alacritty -e "$@"
+mime ^ranger/x-terminal-emulator, has sakura = sakura -e "$@"
+mime ^ranger/x-terminal-emulator, has lilyterm = lilyterm -e "$@"
+#mime ^ranger/x-terminal-emulator, has cool-retro-term = cool-retro-term -e "$@"
+mime ^ranger/x-terminal-emulator, has termite = termite -x '"$@"'
+#mime ^ranger/x-terminal-emulator, has yakuake = yakuake -e "$@"
+mime ^ranger/x-terminal-emulator, has guake = guake -ne "$@"
+mime ^ranger/x-terminal-emulator, has tilda = tilda -c "$@"
+mime ^ranger/x-terminal-emulator, has st = st -e "$@"
+mime ^ranger/x-terminal-emulator, has terminator = terminator -x "$@"
+mime ^ranger/x-terminal-emulator, has urxvt = urxvt -e "$@"
+mime ^ranger/x-terminal-emulator, has pantheon-terminal = pantheon-terminal -e "$@"
+mime ^ranger/x-terminal-emulator, has lxterminal = lxterminal -e "$@"
+mime ^ranger/x-terminal-emulator, has mate-terminal = mate-terminal -x "$@"
+mime ^ranger/x-terminal-emulator, has xfce4-terminal = xfce4-terminal -x "$@"
+mime ^ranger/x-terminal-emulator, has konsole = konsole -e "$@"
+mime ^ranger/x-terminal-emulator, has gnome-terminal = gnome-terminal -- "$@"
+mime ^ranger/x-terminal-emulator, has xterm = xterm -e "$@"
+
+#-------------------------------------------
+# Разное
+#-------------------------------------------
+label wallpaper, number 11, mime ^image, has feh, X = feh --bg-scale "$1"
+label wallpaper, number 12, mime ^image, has feh, X = feh --bg-tile "$1"
+label wallpaper, number 13, mime ^image, has feh, X = feh --bg-center "$1"
+label wallpaper, number 14, mime ^image, has feh, X = feh --bg-fill "$1"
+
+#-------------------------------------------
+# Общие средства открытия файлов
+#-------------------------------------------
+label open, has xdg-open = xdg-open -- "$@"
+label open, has open     = open -- "$@"
+
+# Определить редактор нетекстовых файлов + пейджер в качестве последнего действия
+              !mime ^text, !ext xml|json|csv|tex|py|pl|rb|js|sh|php  = ask
+label editor, !mime ^text, !ext org|xml|json|csv|tex|py|pl|rb|js|sh|php  = ${VISUAL:-$EDITOR} -- "$@"
+label pager,  !mime ^text, !ext xml|json|csv|tex|py|pl|rb|js|sh|php  = "$PAGER" -- "$@"
+
+
+
+######################################################################
+# Действия ниже намеренно оставлены в этом файле так низко, поэтому #
+# они никогда не срабатывают случайно.                             #
+######################################################################
+
+# Execute a file as program/script.
+mime application/x-executable = "$1"
+
+# Переместите файл в корзину с помощью dump-cli.
+label trash, has trash-put = trash-put -- "$@"
+label trash = mkdir -p -- ${XDG_DATA_DIR:-$HOME/.ranger}/ranger-trash; mv -- "$@" ${XDG_DATA_DIR:-$HOME/.ranger}/ranger-trash
+
+#+end_src
+*** scope.sh просмотршик
+#+begin_src bash  :tangle  ~/.config/ranger/scope.sh :mkdirp yes :tangle-mode "a+x"
+   #!/usr/bin/env bash
+
+   set -o noclobber -o noglob -o nounset -o pipefail
+   IFS=$'\n'
+
+   ## If the option `use_preview_script` is set to `true`,
+   ## then this script will be called and its output will be displayed in ranger.
+   ## ANSI color codes are supported.
+   ## STDIN is disabled, so interactive scripts won't work properly
+
+   ## This script is considered a configuration file and must be updated manually.
+   ## It will be left untouched if you upgrade ranger.
+
+   ## Because of some automated testing we do on the script #'s for comments need
+   ## to be doubled up. Code that is commented out, because it's an alternative for
+   ## example, gets only one #.
+
+   ## Meanings of exit codes:
+   ## code | meaning    | action of ranger
+   ## -----+------------+-------------------------------------------
+   ## 0    | success    | Display stdout as preview
+   ## 1    | no preview | Display no preview at all
+   ## 2    | plain text | Display the plain content of the file
+   ## 3    | fix width  | Don't reload when width changes
+   ## 4    | fix height | Don't reload when height changes
+   ## 5    | fix both   | Don't ever reload
+   ## 6    | image      | Display the image `$IMAGE_CACHE_PATH` points to as an image preview
+   ## 7    | image      | Display the file directly as an image
+
+   ## Script arguments
+   FILE_PATH="${1}"         # Full path of the highlighted file
+   PV_WIDTH="${2}"          # Width of the preview pane (number of fitting characters)
+   ## shellcheck disable=SC2034 # PV_HEIGHT is provided for convenience and unused
+   PV_HEIGHT="${3}"         # Height of the preview pane (number of fitting characters)
+   IMAGE_CACHE_PATH="${4}"  # Full path that should be used to cache image preview
+   PV_IMAGE_ENABLED="${5}"  # 'True' if image previews are enabled, 'False' otherwise.
+
+   FILE_EXTENSION="${FILE_PATH##*.}"
+   FILE_EXTENSION_LOWER="$(printf "%s" "${FILE_EXTENSION}" | tr '[:upper:]' '[:lower:]')"
+
+   ## Settings
+   HIGHLIGHT_SIZE_MAX=262143  # 256KiB
+   HIGHLIGHT_TABWIDTH="${HIGHLIGHT_TABWIDTH:-8}"
+   HIGHLIGHT_STYLE="${HIGHLIGHT_STYLE:-pablo}"
+   HIGHLIGHT_OPTIONS="--replace-tabs=${HIGHLIGHT_TABWIDTH} --style=${HIGHLIGHT_STYLE} ${HIGHLIGHT_OPTIONS:-}"
+   PYGMENTIZE_STYLE="${PYGMENTIZE_STYLE:-autumn}"
+   BAT_STYLE="${BAT_STYLE:-plain}"
+   OPENSCAD_IMGSIZE="${RNGR_OPENSCAD_IMGSIZE:-1000,1000}"
+   OPENSCAD_COLORSCHEME="${RNGR_OPENSCAD_COLORSCHEME:-Tomorrow Night}"
+   SQLITE_TABLE_LIMIT=20  # Display only the top <limit> tables in database, set to 0 for no exhaustive preview (only the sqlite_master table is displayed).
+   SQLITE_ROW_LIMIT=5     # Display only the first and the last (<limit> - 1) records in each table, set to 0 for no limits.
+
+   handle_extension() {
+       case "${FILE_EXTENSION_LOWER}" in
+	   ## Archive
+	   a|ace|alz|arc|arj|bz|bz2|cab|cpio|deb|gz|jar|lha|lz|lzh|lzma|lzo|\
+	   rpm|rz|t7z|tar|tbz|tbz2|tgz|tlz|txz|tZ|tzo|war|xpi|xz|Z|zip)
+	       atool --list -- "${FILE_PATH}" && exit 5
+	       bsdtar --list --file "${FILE_PATH}" && exit 5
+	       exit 1;;
+	   rar)
+	       ## Avoid password prompt by providing empty password
+	       unrar lt -p- -- "${FILE_PATH}" && exit 5
+	       exit 1;;
+	   7z)
+	       ## Avoid password prompt by providing empty password
+	       7z l -p -- "${FILE_PATH}" && exit 5
+	       exit 1;;
+
+	   ## PDF
+	   pdf)
+	       ## Preview as text conversion
+	       pdftotext -l 10 -nopgbrk -q -- "${FILE_PATH}" - | \
+		 fmt -w "${PV_WIDTH}" && exit 5
+	       mutool draw -F txt -i -- "${FILE_PATH}" 1-10 | \
+		 fmt -w "${PV_WIDTH}" && exit 5
+	       exiftool "${FILE_PATH}" && exit 5
+	       exit 1;;
+
+	   ## BitTorrent
+	   torrent)
+	       aria2c -S -- "${FILE_PATH}" && exit 5
+	       exit 1;;
+
+	   ## OpenDocument
+	   odt|sxw)
+	       ## Preview as text conversion
+	       odt2txt "${FILE_PATH}" && exit 5
+	       ## Preview as markdown conversion
+	       pandoc -s -t markdown -- "${FILE_PATH}" && exit 5
+	       exit 1;;
+	   ods|odp)
+	       ## Preview as text conversion (unsupported by pandoc for markdown)
+	       odt2txt "${FILE_PATH}" && exit 5
+	       exit 1;;
+
+	   ## XLSX
+	   xlsx)
+	       ## Preview as csv conversion
+	       ## Uses: https://github.com/dilshod/xlsx2csv
+	       xlsx2csv -- "${FILE_PATH}" && exit 5
+	       exit 1;;
+
+	   ## HTML
+	   htm|html|xhtml)
+	       ## Preview as text conversion
+	       w3m -dump "${FILE_PATH}" && exit 5
+	       lynx -dump -- "${FILE_PATH}" && exit 5
+	       elinks -dump "${FILE_PATH}" && exit 5
+   #            pandoc -s -t markdown -- "${FILE_PATH}" && exit 5
+	       ;;
+
+	   ## JSON
+	   json)
+	       jq --color-output . "${FILE_PATH}" && exit 5
+	       python -m json.tool -- "${FILE_PATH}" && exit 5
+	       ;;
+
+	   ## Jupyter Notebooks
+	   ipynb)
+	       jupyter nbconvert --to markdown "${FILE_PATH}" --stdout | env COLORTERM=8bit bat --color=always --style=plain --language=markdown && exit 5
+	       jupyter nbconvert --to markdown "${FILE_PATH}" --stdout && exit 5
+	       jq --color-output . "${FILE_PATH}" && exit 5
+	       python -m json.tool -- "${FILE_PATH}" && exit 5
+	       ;;
+
+	   ## Direct Stream Digital/Transfer (DSDIFF) and wavpack aren't detected
+	   ## by file(1).
+	   dff|dsf|wv|wvc)
+	       mediainfo "${FILE_PATH}" && exit 5
+	       exiftool "${FILE_PATH}" && exit 5
+	       ;; # Continue with next handler on failure
+       esac
+   }
+
+   handle_image() {
+       ## Size of the preview if there are multiple options or it has to be
+       ## rendered from vector graphics. If the conversion program allows
+       ## specifying only one dimension while keeping the aspect ratio, the width
+       ## will be used.
+       local DEFAULT_SIZE="1920x1080"
+
+       local mimetype="${1}"
+       case "${mimetype}" in
+	   ## SVG
+	   image/svg+xml|image/svg)
+	       rsvg-convert --keep-aspect-ratio --width "${DEFAULT_SIZE%x*}" "${FILE_PATH}" -o "${IMAGE_CACHE_PATH}.png" \
+		   && mv "${IMAGE_CACHE_PATH}.png" "${IMAGE_CACHE_PATH}" \
+		   && exit 6
+	       exit 1;;
+
+	   ## DjVu
+	   image/vnd.djvu)
+	       ddjvu -format=tiff -quality=90 -page=1 -size="${DEFAULT_SIZE}" \
+		     - "${IMAGE_CACHE_PATH}" < "${FILE_PATH}" \
+		     && exit 6 || exit 1;;
+
+	   ## Image
+	   image/*)
+	       local orientation
+	       orientation="$( identify -format '%[EXIF:Orientation]\n' -- "${FILE_PATH}" )"
+	       ## If orientation data is present and the image actually
+	       ## needs rotating ("1" means no rotation)...
+	       if [[ -n "$orientation" && "$orientation" != 1 ]]; then
+		   ## ...auto-rotate the image according to the EXIF data.
+		   convert -- "${FILE_PATH}" -auto-orient "${IMAGE_CACHE_PATH}" && exit 6
+	       fi
+
+	       ## `w3mimgdisplay` will be called for all images (unless overridden
+	       ## as above), but might fail for unsupported types.
+	       exit 7;;
+
+	   ## Video
+	    video/*)
+	        # Get embedded thumbnail
+#	        ffmpeg -i "${FILE_PATH}" -map 0:v -map -0:V -c copy "${IMAGE_CACHE_PATH}" && exit 6
+	        # Get frame 10% into video
+	        ffmpegthumbnailer -i "${FILE_PATH}" -o "${IMAGE_CACHE_PATH}" -s 0 && exit 6
+	        exit 1;;
+
+	   ## Audio
+	   # audio/*)
+	   #     # Get embedded thumbnail
+	   #     ffmpeg -i "${FILE_PATH}" -map 0:v -map -0:V -c copy \
+	   #       "${IMAGE_CACHE_PATH}" && exit 6;;
+
+	   ## PDF
+	   # application/pdf)
+	   #     pdftoppm -f 1 -l 1 \
+	   #              -scale-to-x "${DEFAULT_SIZE%x*}" \
+	   #              -scale-to-y -1 \
+	   #              -singlefile \
+	   #              -jpeg -tiffcompression jpeg \
+	   #              -- "${FILE_PATH}" "${IMAGE_CACHE_PATH%.*}" \
+	   #         && exit 6 || exit 1;;
+
+
+	   ## ePub, MOBI, FB2 (using Calibre)
+	   # application/epub+zip|application/x-mobipocket-ebook|\
+	   # application/x-fictionbook+xml)
+	   #     # ePub (using https://github.com/marianosimone/epub-thumbnailer)
+	   #     epub-thumbnailer "${FILE_PATH}" "${IMAGE_CACHE_PATH}" \
+	   #         "${DEFAULT_SIZE%x*}" && exit 6
+	   #     ebook-meta --get-cover="${IMAGE_CACHE_PATH}" -- "${FILE_PATH}" \
+	   #         >/dev/null && exit 6
+	   #     exit 1;;
+
+	   ## Font
+	   application/font*|application/*opentype)
+	       preview_png="/tmp/$(basename "${IMAGE_CACHE_PATH%.*}").png"
+	       if fontimage -o "${preview_png}" \
+			    --pixelsize "120" \
+			    --fontname \
+			    --pixelsize "80" \
+			    --text "  ABCDEFGHIJKLMNOPQRSTUVWXYZ  " \
+			    --text "  abcdefghijklmnopqrstuvwxyz  " \
+			    --text "  0123456789.:,;(*!?') ff fl fi ffi ffl  " \
+			    --text "  The quick brown fox jumps over the lazy dog.  " \
+			    "${FILE_PATH}";
+	       then
+		   convert -- "${preview_png}" "${IMAGE_CACHE_PATH}" \
+		       && rm "${preview_png}" \
+		       && exit 6
+	       else
+		   exit 1
+	       fi
+	       ;;
+
+	   ## Preview archives using the first image inside.
+	   ## (Very useful for comic book collections for example.)
+	   # application/zip|application/x-rar|application/x-7z-compressed|\
+	   #     application/x-xz|application/x-bzip2|application/x-gzip|application/x-tar)
+	   #     local fn=""; local fe=""
+	   #     local zip=""; local rar=""; local tar=""; local bsd=""
+	   #     case "${mimetype}" in
+	   #         application/zip) zip=1 ;;
+	   #         application/x-rar) rar=1 ;;
+	   #         application/x-7z-compressed) ;;
+	   #         *) tar=1 ;;
+	   #     esac
+	   #     { [ "$tar" ] && fn=$(tar --list --file "${FILE_PATH}"); } || \
+	   #     { fn=$(bsdtar --list --file "${FILE_PATH}") && bsd=1 && tar=""; } || \
+	   #     { [ "$rar" ] && fn=$(unrar lb -p- -- "${FILE_PATH}"); } || \
+	   #     { [ "$zip" ] && fn=$(zipinfo -1 -- "${FILE_PATH}"); } || return
+	   #
+	   #     fn=$(echo "$fn" | python -c "from __future__ import print_function; \
+	   #             import sys; import mimetypes as m; \
+	   #             [ print(l, end='') for l in sys.stdin if \
+	   #               (m.guess_type(l[:-1])[0] or '').startswith('image/') ]" |\
+	   #         sort -V | head -n 1)
+	   #     [ "$fn" = "" ] && return
+	   #     [ "$bsd" ] && fn=$(printf '%b' "$fn")
+	   #
+	   #     [ "$tar" ] && tar --extract --to-stdout \
+	   #         --file "${FILE_PATH}" -- "$fn" > "${IMAGE_CACHE_PATH}" && exit 6
+	   #     fe=$(echo -n "$fn" | sed 's/[][*?\]/\\\0/g')
+	   #     [ "$bsd" ] && bsdtar --extract --to-stdout \
+	   #         --file "${FILE_PATH}" -- "$fe" > "${IMAGE_CACHE_PATH}" && exit 6
+	   #     [ "$bsd" ] || [ "$tar" ] && rm -- "${IMAGE_CACHE_PATH}"
+	   #     [ "$rar" ] && unrar p -p- -inul -- "${FILE_PATH}" "$fn" > \
+	   #         "${IMAGE_CACHE_PATH}" && exit 6
+	   #     [ "$zip" ] && unzip -pP "" -- "${FILE_PATH}" "$fe" > \
+	   #         "${IMAGE_CACHE_PATH}" && exit 6
+	   #     [ "$rar" ] || [ "$zip" ] && rm -- "${IMAGE_CACHE_PATH}"
+	   #     ;;
+       esac
+
+       # openscad_image() {
+       #     TMPPNG="$(mktemp -t XXXXXX.png)"
+       #     openscad --colorscheme="${OPENSCAD_COLORSCHEME}" \
+       #         --imgsize="${OPENSCAD_IMGSIZE/x/,}" \
+       #         -o "${TMPPNG}" "${1}"
+       #     mv "${TMPPNG}" "${IMAGE_CACHE_PATH}"
+       # }
+
+       case "${FILE_EXTENSION_LOWER}" in
+	  ## 3D models
+	  ## OpenSCAD only supports png image output, and ${IMAGE_CACHE_PATH}
+	  ## is hardcoded as jpeg. So we make a tempfile.png and just
+	  ## move/rename it to jpg. This works because image libraries are
+	  ## smart enough to handle it.
+	  # csg|scad)
+	  #     openscad_image "${FILE_PATH}" && exit 6
+	  #     ;;
+	  # 3mf|amf|dxf|off|stl)
+	  #     openscad_image <(echo "import(\"${FILE_PATH}\");") && exit 6
+	  #     ;;
+	  drawio)
+	      draw.io -x "${FILE_PATH}" -o "${IMAGE_CACHE_PATH}" \
+		  --width "${DEFAULT_SIZE%x*}" && exit 6
+	      exit 1;;
+       esac
+   }
+
+   handle_mime() {
+       local mimetype="${1}"
+       case "${mimetype}" in
+	   ## RTF and DOC
+	   text/rtf|*msword)
+	       ## Preview as text conversion
+	       ## note: catdoc does not always work for .doc files
+	       ## catdoc: http://www.wagner.pp.ru/~vitus/software/catdoc/
+	       catdoc -- "${FILE_PATH}" && exit 5
+	       exit 1;;
+
+	   ## DOCX, ePub, FB2 (using markdown)
+	   ## You might want to remove "|epub" and/or "|fb2" below if you have
+	   ## uncommented other methods to preview those formats
+	   ,*wordprocessingml.document|*/epub+zip|*/x-fictionbook+xml)
+	     epub2txt -- "${FILE_PATH}" && exit 5
+	       ## Preview as markdown conversion
+#	       head -n1000  -- "${FILE_PATH}"|pandoc -s -t markdown && exit 5
+	       exit 1;;
+
+	   ## E-mails
+	   message/rfc822)
+	       ## Parsing performed by mu: https://github.com/djcb/mu
+	       mu view -- "${FILE_PATH}" && exit 5
+	       exit 1;;
+
+	   ## XLS
+	   ,*ms-excel)
+	       ## Preview as csv conversion
+	       ## xls2csv comes with catdoc:
+	       ##   http://www.wagner.pp.ru/~vitus/software/catdoc/
+	       xls2csv -- "${FILE_PATH}" && exit 5
+	       exit 1;;
+
+	   ## SQLite
+	   ,*sqlite3)
+	       ## Preview as text conversion
+	       sqlite_tables="$( sqlite3 "file:${FILE_PATH}?mode=ro" '.tables' )" \
+		   || exit 1
+	       [ -z "${sqlite_tables}" ] &&
+		   { echo "Empty SQLite database." && exit 5; }
+	       sqlite_show_query() {
+		   sqlite-utils query "${FILE_PATH}" "${1}" --table --fmt fancy_grid \
+		   || sqlite3 "file:${FILE_PATH}?mode=ro" "${1}" -header -column
+	       }
+	       ## Display basic table information
+	       sqlite_rowcount_query="$(
+		   sqlite3 "file:${FILE_PATH}?mode=ro" -noheader \
+		       'SELECT group_concat(
+			   "SELECT """ || name || """ AS tblname,
+					     count(*) AS rowcount
+			    FROM " || name,
+			   " UNION ALL "
+		       )
+		       FROM sqlite_master
+		       WHERE type="table" AND name NOT LIKE "sqlite_%";'
+	       )"
+	       sqlite_show_query \
+		   "SELECT tblname AS 'table', rowcount AS 'count',
+		   (
+		       SELECT '(' || group_concat(name, ', ') || ')'
+		       FROM pragma_table_info(tblname)
+		   ) AS 'columns',
+		   (
+		       SELECT '(' || group_concat(
+			   upper(type) || (
+			       CASE WHEN pk > 0 THEN ' PRIMARY KEY' ELSE '' END
+			   ),
+			   ', '
+		       ) || ')'
+		       FROM pragma_table_info(tblname)
+		   ) AS 'types'
+		   FROM (${sqlite_rowcount_query});"
+	       if [ "${SQLITE_TABLE_LIMIT}" -gt 0 ] &&
+		  [ "${SQLITE_ROW_LIMIT}" -ge 0 ]; then
+		   ## Do exhaustive preview
+		   echo && printf '>%.0s' $( seq "${PV_WIDTH}" ) && echo
+		   sqlite3 "file:${FILE_PATH}?mode=ro" -noheader \
+		       "SELECT name FROM sqlite_master
+		       WHERE type='table' AND name NOT LIKE 'sqlite_%'
+		       LIMIT ${SQLITE_TABLE_LIMIT};" |
+		       while read -r sqlite_table; do
+			   sqlite_rowcount="$(
+			       sqlite3 "file:${FILE_PATH}?mode=ro" -noheader \
+				   "SELECT count(*) FROM ${sqlite_table}"
+			   )"
+			   echo
+			   if [ "${SQLITE_ROW_LIMIT}" -gt 0 ] &&
+			      [ "${SQLITE_ROW_LIMIT}" \
+				-lt "${sqlite_rowcount}" ]; then
+			       echo "${sqlite_table} [${SQLITE_ROW_LIMIT} of ${sqlite_rowcount}]:"
+			       sqlite_ellipsis_query="$(
+				   sqlite3 "file:${FILE_PATH}?mode=ro" -noheader \
+				       "SELECT 'SELECT ' || group_concat(
+					   '''...''', ', '
+				       )
+				       FROM pragma_table_info(
+					   '${sqlite_table}'
+				       );"
+			       )"
+			       sqlite_show_query \
+				   "SELECT * FROM (
+				       SELECT * FROM ${sqlite_table} LIMIT 1
+				   )
+				   UNION ALL ${sqlite_ellipsis_query} UNION ALL
+				   SELECT * FROM (
+				       SELECT * FROM ${sqlite_table}
+				       LIMIT (${SQLITE_ROW_LIMIT} - 1)
+				       OFFSET (
+					   ${sqlite_rowcount}
+					   - (${SQLITE_ROW_LIMIT} - 1)
+				       )
+				   );"
+			   else
+			       echo "${sqlite_table} [${sqlite_rowcount}]:"
+			       sqlite_show_query "SELECT * FROM ${sqlite_table};"
+			   fi
+		       done
+	       fi
+	       exit 5;;
+
+	   ## Text
+	   text/* | */xml)
+	       ## Syntax highlight
+	       if [[ "$( stat --printf='%s' -- "${FILE_PATH}" )" -gt "${HIGHLIGHT_SIZE_MAX}" ]]; then
+		   exit 2
+	       fi
+	       if [[ "$( tput colors )" -ge 256 ]]; then
+		   local pygmentize_format='terminal256'
+		   local highlight_format='xterm256'
+	       else
+		   local pygmentize_format='terminal'
+		   local highlight_format='ansi'
+	       fi
+	       env HIGHLIGHT_OPTIONS="${HIGHLIGHT_OPTIONS}" highlight \
+		   --out-format="${highlight_format}" \
+		   --force -- "${FILE_PATH}" && exit 5
+	       env COLORTERM=8bit bat --color=always --style="${BAT_STYLE}" \
+		   -- "${FILE_PATH}" && exit 5
+	       pygmentize -f "${pygmentize_format}" -O "style=${PYGMENTIZE_STYLE}"\
+		   -- "${FILE_PATH}" && exit 5
+	       exit 2;;
+
+	   ## DjVu
+	   image/vnd.djvu)
+	       ## Preview as text conversion (requires djvulibre)
+	       djvutxt "${FILE_PATH}" | fmt -w "${PV_WIDTH}" && exit 5
+	       exiftool "${FILE_PATH}" && exit 5
+	       exit 1;;
+
+	   ## Image
+	   image/*)
+	       ## Preview as text conversion
+	       # img2txt --gamma=0.6 --width="${PV_WIDTH}" -- "${FILE_PATH}" && exit 4
+	       exiftool "${FILE_PATH}" && exit 5
+	       exit 1;;
+
+	   ## Video and audio
+#	   video/* | audio/*)
+	   audio/*)
+	       mediainfo "${FILE_PATH}" && exit 5
+	       exiftool "${FILE_PATH}" && exit 5
+	       exit 1;;
+
+	   ## ELF files (executables and shared objects)
+	   application/x-executable | application/x-pie-executable | application/x-sharedlib)
+	       readelf -WCa "${FILE_PATH}" && exit 5
+	       exit 1;;
+       esac
+   }
+
+   handle_fallback() {
+       echo '----- File Type Classification -----' && file --dereference --brief -- "${FILE_PATH}" && exit 5
+   }
+
+
+   MIMETYPE="$( file --dereference --brief --mime-type -- "${FILE_PATH}" )"
+   if [[ "${PV_IMAGE_ENABLED}" == 'True' ]]; then
+       handle_image "${MIMETYPE}"
+   fi
+   handle_extension
+   handle_mime "${MIMETYPE}"
+   handle_fallback
+
+   exit 1
+#+end_src
+** yazi
+yazi.toml
+,#+header: :tangle ~/.config/yazi/yazi.toml  :mkdirp yes
+#+begin_src toml 
+[manager]
+ratio          = [ 1, 4, 3 ]
+#+end_src
+keymap.toml
+,#+header: :tangle ~/.config/yazi/keymap.toml  :mkdirp yes
+#+begin_src toml
+# A TOML linter such as https://taplo.tamasfe.dev/ can use this schema to validate your config.
+# If you encounter any issues, please make an issue at https://github.com/yazi-rs/schemas.
+"$schema" = "https://yazi-rs.github.io/schemas/keymap.json"
+
+[manager]
+
+prepend_keymap = [
+
+	# Navigation
+
+	{ on = "<", run = "back",    desc = "Go back to the previous directory" },
+	{ on = ">", run = "forward", desc = "Go forward to the next directory" },
+
+
+	# Visual mode
+
+	# Seeking
+	{ on = "K", run = "seek -5", desc = "Seek up 5 units in the preview" },
+	{ on = "J", run = "seek 5",  desc = "Seek down 5 units in the preview" },
+
+	# Spotting
+
+	# Operation
+	{ on = "d",         run = "yank --cut",                  desc = "Yank selected files (cut)" },
+	{ on = "D",         run = "unyank",                      desc = "Cancel the yank status" },
+	{ on = "x",         run = "remove",                      desc = "Trash selected files" },
+	{ on = "X",         run = "remove --permanently",        desc = "Permanently delete selected files" },
+	{ on = "a",         run = "create",                      desc = "Create a file (ends with / for directories)" },
+
+	# Linemode
+
+	# Copy
+
+	# Filter
+
+	# Find
+
+	# Sorting
+
+	# Goto
+	{ on = [ "g", "h" ],       run = "cd ~",             desc = "home" },
+	{ on = [ "g", "c" ],       run = "cd ~/.config",     desc = "~/.config" },
+	{ on = [ "g", "z" ],       run = "cd ~/Downloads",   desc = "~/Downloads" },
+	{ on = [ "g", "d" ],       run = "cd ~/Документы",   desc = "~/Документы" },
+	{ on = [ "g", "v" ],       run = "cd ~/Видео",   desc = "~/Видео" },
+	{ on = [ "g", "m" ],       run = "cd ~/Музыка",   desc = "~/Музыка" },
+	{ on = [ "g", "G" ],       run = "cd ~/git",   desc = "~/git" },
+
+	# Tabs
+
+	# Tasks
+
+	# Help
+]
+#+end_src
+** conky
+***  Gotham_clock
+конфиг
+#+header:  :tangle ~/.config/conky/gotham/gotham.conf  :mkdirp yes
+#+begin_src ascii
+use_xft yes
+xftfont 123:size=8
+xftalpha 0.1
+update_interval 1
+total_run_times 0
+
+own_window yes
+own_window_type normal
+own_window_transparent yes
+own_window_hints undecorated,above,skip_taskbar,skip_pager
+own_window_colour 000000
+own_window_argb_visual yes
+own_window_argb_value 0
+
+double_buffer yes
+#minimum_size 250 5
+#maximum_width 500
+draw_shades no
+draw_outline no
+draw_borders no
+draw_graph_borders no
+default_color white
+default_shade_color red
+default_outline_color green
+alignment top_right
+gap_x 0
+gap_y 30
+no_buffers yes
+uppercase no
+cpu_avg_samples 2
+net_avg_samples 1
+override_utf8_locale yes
+use_spacer yes
+
+minimum_size 0 0
+TEXT
+"
+${voffset 10}${color EAEAEA}${font GE Inspira:pixelsize=120}${time %H:%M}${font}${voffset -84}${offset 10}${color FFA300}${font GE Inspira:pixelsize=42}${time %d} ${voffset -15}${color EAEAEA}${font GE Inspira:pixelsize=22}${time  %B} ${time %Y}${font}${voffset 24}${font GE Inspira:pixelsize=58}${offset -148}${time %A}${font}
+${voffset 1}${offset 12}${font Ubuntu:pixelsize=12}${color FFA300}HD ${offset 9}$color${fs_free /} / ${fs_size /}${offset 30}${color FFA300}RAM ${offset 9}$color$mem / $memmax${offset 30}${color FFA300}CPU ${offset 9}$color${cpu cpu0}%
+
+
+
+
+
+"
+#+end_src
+desktop-file
+#+header: :tangle ~/.local/share/applications/gotham.desktop  :mkdirp yes
+#+begin_src text 
+[Desktop Entry]
+Name=Gotham Clock
+GenericName=Gotham Clock
+Comment=Часы на рабочий стол
+Type=Application
+Terminal=false
+Exec=/usr/bin/env conky -c /home/andrey/.config/conky/gotham/gotham.conf 
+Categories=Utility;Clock;
+#+end_src
+** tridactyl
+#+header: :tangle ~/.config/tridactyl/tridactylrc :mkdirp yes :noweb yes
+#+begin_src text
+<<tridactyl-searchengines>>
+<<tridactyl-cyrylic-keys>>
+#+end_src
+
+пошуковики
+#+header: :noweb-ref tridactyl-searchengines
+#+begin_src txt 
+set searchurls.b https://www.bing.com/search?q=
+set searchurls.d https://duckduckgo.com/?q=
+set searchurls.g https://www.google.com/search?q=
+set searchurls.lulkoil https://www.lukol.com/s.php?q=#gsc.tab=0&gsc.page=1&gsc.q=%s
+set searchurls.openstreetmap https://www.openstreetmap.org/search?query=
+set searchurls.schular https://scholar.google.com/scholar?q=
+set searchurls.searx https://searx.me/?category_general=on&q=
+set searchurls.startpage https://startpage.com/do/search?language=english&cat=web&query=
+set searchurls.twitter https://twitter.com/search?q=
+set searchurls.swisscows https://swisscows.com/web?culture=ru&region=iv&query=%s
+set searchurls.yahoo https://search.yahoo.com/search?p=
+set searchurls.brave https://search.brave.com/search?q=%s&source=web
+
+
+"AI
+set searchurls.aperplexity https://www.perplexity.ai/search?q=%s
+set searchurls.awolframalpha https://www.wolframalpha.com/input?i=%s
+set searchurls.ayou https://you.com/search?&tbm=youchat&cfr=chat&q=%s
+" set searchurls.awebpilot https://www.webpilot.ai/search?q=%s " виснет
+set searchurls.afelladrin https://felladrin-minisearch.hf.space/?q=%s
+" set searchurls.aisou https://isou.chat/search?q=%s не открывается
+set searchurls.aiask https://iask.ai/?mode=question&q=%s
+
+set searchurls.agenspark https://www.genspark.ai/search?query=%s 
+
+" AI поиск ответов в reddit и подобных ресурсах
+set searchurls.athegigabrain https://thegigabrain.com/search/%s
+set searchurls.aexa https://exa.ai/search?q=%s
+set searchurls.adeepfind https://www.deepfind.co/%s
+"IT
+set searchurls.gh https://github.com/search?q=%s
+set searchurls.librariesio https://libraries.io/search?q=%s
+set searchurls.stackoverflow http://stackoverflow.com/search?q=%s
+set searchurls.node https://nodejs.org/dist/latest/docs/api/
+set searchurls.npm https://www.npmjs.com/package/
+set searchurls.npms https://www.npmjs.com/search?q=
+set searchurls.mdn https://developer.mozilla.org/en-US/search?q=
+set searchurls.pydoc https://docs.python.org/3/search.html?q=%s
+" set searchurls.rustdoc https://doc.rust-lang.org/std/index.html?search=%s
+"медиа
+set searchurls.flicr https://www.flickr.com/search/?text=%s
+set searchurls.gi https://www.google.com/searchbyimage?image_url=%s
+set searchurls.vimeo https://vimeo.com/search?q=%s
+set searchurls.yt https://www.youtube.com/results?search_query=%s
+set searchurls.imdb https://www.imdb.com/find?q=%s
+
+"вики
+set searchurls.wen https://en.wikipedia.org/wiki/%s
+set searchurls.wua https://uk.wikipedia.org/wiki/%s
+set searchurls.wru https://ru.wikipedia.org/wiki/%s
+set searchurls.warch https://wiki.archlinux.org/index.php?title=Special:Search&search=%s
+
+" скачивание
+
+set searchurls.rt https://global.bing.com/search?setmkt=en-us&setlang=en-us&q=!site:rutracker.org %s
+" set searchurls.torrentz https://torrentz2.eu/search?f=%s не открывается
+set searchurls.pirateby https://thepiratebay.org/s/?q=%s&=on&page=0&orderby=99
+set searchurls.lre http://gen.lib.rus.ec/search.php?view=simple&res=25&phrase=1&column=def&page=1&req=%s
+set searchurls.libgenli https://libgen.li/index.php?req=%s&columns[]=t&columns[]=a&columns[]=s&columns[]=y&columns[]=p&columns[]=i&objects[]=f&objects[]=e&objects[]=s&objects[]=a&objects[]=p&objects[]=w&topics[]=l&topics[]=c&topics[]=f&topics[]=a&topics[]=m&topics[]=r&topics[]=s&res=25&filesuns=all 
+set searchurls.libgenis https://libgen.is/search.php?req=%s&lg_topic=libgen&open=0&view=simple&res=25&phrase=1&column=def
+"social
+set searchurls.blogsearchengine http://www.blogsearchengine.org/search.html?q=%s
+set searchurls.socialsearcher https://www.social-searcher.com/social-buzz/?q5=%s
+
+"переводчики и словари
+set searchurls.gt https://translate.google.com/#view=home&op=translate&sl=auto&tl=ru&text=%s
+
+
+"архивы и кеш
+set searchurls.webarchive https://web.archive.org/web/*/%s
+
+
+"map
+set searchurls.gm https://www.google.com/maps/search/%s
+
+
+"mix
+set searchurls.emoji https://emojipedia.org/search/?q=
+
+
+" Что это за поисковики?
+" для чего порт используется
+set searchurls.port https://www.speedguide.net/port.php?port=%s 
+set searchurls.ports https://www.speedguide.net/ports.php?filter=%s
+
+" музыка
+set searchurls.bandcamp https://bandcamp.com/search?q=%s
+
+set searchurls.crates https://crates.io/search?q=%s
+
+set searchurls.fdroid https://search.f-droid.org/?q=%s
+set searchurls.gi1 https://www.google.com/search?q=%s&tbm=isch
+
+alias archive js tri.excmds.open("https://web.archive.org/save/" + window.location.href)
+alias view-archive js tri.excmds.open("https://web.archive.org/*/" + window.location.href)
+alias view-google-cache js tri.excmds.open("https://www.google.com/search?q=cache:" + window.location.href)
+
+set searchengine iask
+  
+#+end_src
+
+#+header: :noweb-ref tridactyl-cyrylic-keys
+#+begin_src txt
+set keyboardlayoutforce false
+set keytranslatemodes.ignoremaps true
+set keytranslatemodes.hintmaps true
+  
+set keytranslatemap., ?
+set keytranslatemap.. /
+set keytranslatemap./ |
+set keytranslatemap.а f
+set keytranslatemap.А F
+set keytranslatemap.б ,
+set keytranslatemap.Б <
+set keytranslatemap.в d
+set keytranslatemap.В D
+set keytranslatemap.г u
+set keytranslatemap.Г U
+set keytranslatemap.д l
+set keytranslatemap.Д L
+set keytranslatemap.е t
+set keytranslatemap.Е T
+set keytranslatemap.є '
+set keytranslatemap.Є “
+set keytranslatemap.ж ;
+set keytranslatemap.Ж :
+set keytranslatemap.з p
+set keytranslatemap.З P
+set keytranslatemap.и b
+set keytranslatemap.И B
+set keytranslatemap.і s
+set keytranslatemap.І S
+set keytranslatemap.ї ]
+set keytranslatemap.Ї }
+set keytranslatemap.й q
+set keytranslatemap.Й Q
+set keytranslatemap.к r
+set keytranslatemap.К R
+set keytranslatemap.л k
+set keytranslatemap.Л K
+set keytranslatemap.м v
+set keytranslatemap.М V
+set keytranslatemap.н y
+set keytranslatemap.Н Y
+set keytranslatemap.о j
+set keytranslatemap.О J
+set keytranslatemap.п g
+set keytranslatemap.П G
+set keytranslatemap.р h
+set keytranslatemap.Р H
+set keytranslatemap.с c
+set keytranslatemap.С C
+set keytranslatemap.т n
+set keytranslatemap.Т N
+set keytranslatemap.у e
+set keytranslatemap.У E
+set keytranslatemap.ф a
+set keytranslatemap.Ф A
+set keytranslatemap.х [
+set keytranslatemap.Х {
+set keytranslatemap.ц w
+set keytranslatemap.Ц W
+set keytranslatemap.ч x
+set keytranslatemap.Ч X
+set keytranslatemap.ш i
+set keytranslatemap.Ш I
+set keytranslatemap.щ o
+set keytranslatemap.Щ O
+set keytranslatemap.ъ ]
+set keytranslatemap.Ъ }
+set keytranslatemap.ы s
+set keytranslatemap.Ы S
+set keytranslatemap.ь m
+set keytranslatemap.Ь M
+set keytranslatemap.э '
+set keytranslatemap.Э “
+set keytranslatemap.ю .
+set keytranslatemap.Ю >
+set keytranslatemap.я z
+set keytranslatemap.Я Z
+
+#+end_src
+
+#+begin_src txt
+" General Settings
+set update.lastchecktime 1746245732971
+set update.nag true
+set update.nagwait 7
+set update.lastnaggedversion 1.14.0
+set update.checkintervalsecs 86400
+set configversion 2.0
+
+  
+set searchengine duckduckgo
+set searchurls.bing https://www.bing.com/search?q=
+set searchurls.duckduckgo https://duckduckgo.com/?q=
+set searchurls.google https://www.google.com/search?q=
+"set searchurls.lukol https://www.lukol.com/s.php?q=#gsc.tab=0&gsc.page=1&gsc.q=%s
+set searchurls.mdn https://developer.mozilla.org/en-US/search?q=
+set searchurls.openstreetmap https://www.openstreetmap.org/search?query=
+"set searchurls.qwant https://www.qwant.com/?q=
+set searchurls.schular https://scholar.google.com/scholar?q=
+set searchurls.searx https://searx.me/?category_general=on&q=
+set searchurls.startpage https://startpage.com/do/search?language=english&cat=web&query=
+set searchurls.twitter https://twitter.com/search?q=
+set searchurls.swisscows https://swisscows.com/web?culture=ru&region=iv&query=%s
+set searchurls.yahoo https://search.yahoo.com/search?p=
+set searchurls.perplexity https://www.perplexity.ai/search?q=%s
+set searchurls.wolframalpha https://www.wolframalpha.com/input?i=%s
+set searchurls.you https://you.com/search?&tbm=youchat&cfr=chat&q=%s
+set searchurls.github https://github.com/search?q=%s
+set searchurls.io https://libraries.io/search?q=%s
+set searchurls.stackoverflow http://stackoverflow.com/search?q=%s
+set searchurls.node https://nodejs.org/dist/latest/docs/api/
+set searchurls.npm https://www.npmjs.com/search?q=%s
+set searchurls.npms https://www.npmjs.com/search?q=
+set searchurls.nps https://www.npmjs.com/search?q=
+set searchurls.flickr https://www.flickr.com/search/?text=%s
+set searchurls.googleimage https://www.google.com/searchbyimage?image_url=%s
+set searchurls.vimeo https://vimeo.com/search?q=%s
+set searchurls.youtube https://www.youtube.com/results?search_query=%s
+set searchurls.wikien https://en.wikipedia.org/wiki/%s
+set searchurls.wikiua https://uk.wikipedia.org/wiki/%s
+set searchurls.wikiru https://ru.wikipedia.org/wiki/%s
+set searchurls.wikiarch https://wiki.archlinux.org/index.php?title=Special:Search&search=%s
+set searchurls.rutracker https://global.bing.com/search?setmkt=en-us&setlang=en-us&q=!site:rutracker.org %s
+set searchurls.librusec http://gen.lib.rus.ec/search.php?view=simple&res=25&phrase=1&column=def&page=1&req=%s
+set searchurls.libgenli https://libgen.li/index.php?req=%s&columns[]=t&columns[]=a&columns[]=s&columns[]=y&columns[]=p&columns[]=i&objects[]=f&objects[]=e&objects[]=s&objects[]=a&objects[]=p&objects[]=w&topics[]=l&topics[]=c&topics[]=f&topics[]=a&topics[]=m&topics[]=r&topics[]=s&res=25&filesuns=all
+set searchurls.libgenis https://libgen.is/search.php?req=%s&lg_topic=libgen&open=0&view=simple&res=25&phrase=1&column=def
+set searchurls.blogsearchengine http://www.blogsearchengine.org/search.html?q=%s
+set searchurls.social-searcher https://www.social-searcher.com/social-buzz/?q5=%s
+set searchurls.archive https://web.archive.org/web/*/%s
+set searchurls.cachedpages http://www.cachedpages.com/cached/page.asp?url=%s
+set searchurls.emoji https://emojipedia.org/search/?q=
+set searchurls.port https://www.speedguide.net/port.php?port=%s
+set searchurls.protondb https://www.protondb.com/search?q=
+set searchurls.rfc https://datatracker.ietf.org/doc/html/rfc%s
+set searchurls.bandcamp https://bandcamp.com/search?q=%s
+set searchurls.cnrtl http://www.cnrtl.fr/lexicographie/%s
+set searchurls.conj http://www.les-verbes.com/conjuguer.php?verbe=%s
+set searchurls.crates https://crates.io/search?q=%s
+set searchurls.fdroid https://search.f-droid.org/?q=%s
+set searchurls.gi https://www.google.com/search?q=%s&tbm=isch
+set searchurls.imdb https://www.imdb.com/find?q=%s
+set searchurls.monova https://monova.to/search?term=%s
+set searchurls.pydoc https://docs.python.org/3/search.html?q=%s
+set searchurls.ratp https://www.ratp.fr/itineraires?start=%s1&end=%s2&lieu_depart=&lieu_arrivee=&modes[rail]=rail&modes[metro]=metro&modes[bus]=bus&modes[tram]=tram&itinerary_profile=fastest&op=C%27est+parti
+set searchurls.rustdoc https://doc.rust-lang.org/std/index.html?search=%s
+set searchurls.skyt https://www.skytorrents.to/?search=%s
+set searchurls.steam https://store.steampowered.com/search/?term=%s
+set searchurls.torrentz https://torrentz2.eu/search?f=%s
+set searchurls.tpb https://thepiratebay.org/s/?q=%s&=on&page=0&orderby=99
+set searchurls.tre http://www.wordreference.com/redirect/translation.aspx?w=%s&dict=enfr
+set searchurls.trf http://www.wordreference.com/redirect/translation.aspx?w=%s&dict=fren
+set searchurls.googlemap https://www.google.com/maps/search/%s
+set searchurls.ports https://www.speedguide.net/ports.php?filter=%s
+set searchurls.scholar https://scholar.google.com/scholar?q=
+
+set keytranslatemodes.ignoremaps true
+set keytranslatemodes.hintmaps true
+set exmessagesocket /tmp/tridactil_stdin
+
+" Binds
+bind !! fillcmdline !
+bind !tt !s kitty
+bind s composite sel_su|fillcmdline tabopen
+bind <A-p> pin
+bind <A-m> mute toggle
+bind <F1> help
+bind ? fillcmdline help
+bind o fillcmdline open
+bind O current_url open
+bind w fillcmdline winopen
+bind W current_url winopen
+bind t fillcmdline tabopen
+bind ]] followpage next
+bind [[ followpage prev
+bind [c urlincrement -1
+bind ]c urlincrement 1
+bind <C-x> urlincrement -1
+bind <C-a> urlincrement 1
+bind T current_url tabopen
+bind yy clipboard yank
+bind ys clipboard yankshort
+bind yc clipboard yankcanon
+bind ym clipboard yankmd
+bind yt clipboard yanktitle
+bind gh home
+bind gH home true
+bind p clipboard open
+bind P clipboard tabopen
+bind j scrollline 10
+bind <C-e> scrollline 10
+bind k scrollline -10
+bind <C-y> scrollline -10
+bind h scrollpx -50
+bind l scrollpx 50
+bind G scrollto 100
+bind gg scrollto 0
+bind <C-u> scrollpage -0.5
+bind <C-d> scrollpage 0.5
+bind <C-f> scrollpage 1
+bind <C-b> scrollpage -1
+bind $ scrollto 100 x
+bind ^ scrollto 0 x
+bind <C-6> tab #
+bind <C-^> tab #
+bind H back
+bind L forward
+bind <C-o> jumpprev
+bind <C-i> jumpnext
+bind d tabclose
+bind D composite tabprev; tabclose #
+bind gx0 tabclosealltoleft
+bind gx$ tabclosealltoright
+bind << tabmove -1
+bind >> tabmove +1
+bind u undo
+bind U undo window
+bind r reload
+bind R reloadhard
+bind x stop
+bind gi focusinput -l
+bind g? rot13
+bind g; changelistjump -1
+bind J tabprev
+bind K tabnext
+bind gt tabnext_gt
+bind gT tabprev
+bind g^ tabfirst
+bind g0 tabfirst
+bind g$ tablast
+bind gr reader
+bind gu urlparent
+bind gU urlroot
+bind gf viewsource
+bind : fillcmdline_notrail
+bind S fillcmdline tabopen search
+bind M gobble 1 quickmark
+bind B fillcmdline taball
+bind b fillcmdline tab
+bind ZZ qall
+bind f hint
+bind F hint -b
+bind gF hint -qb
+bind ;i hint -i
+bind ;b hint -b
+bind ;o hint
+bind ;I hint -I
+bind ;k hint -k
+bind ;y hint -y
+bind ;p hint -p
+bind ;P hint -P
+bind ;r hint -r
+bind ;s hint -s
+bind ;S hint -S
+bind ;a hint -a
+bind ;A hint -A
+bind ;; hint -;
+bind ;# hint -#
+bind ;v hint -W mpvsafe
+bind ;w hint -w
+bind ;t hint -W tabopen
+bind ;O hint -W fillcmdline_notrail open
+bind ;W hint -W fillcmdline_notrail winopen
+bind ;T hint -W fillcmdline_notrail tabopen
+bind ;z hint -z
+bind ;m composite hint -pipe img src | js -p tri.excmds.open('images.google.com/searchbyimage?image_url=' + JS_ARG)
+bind ;M composite hint -pipe img src | jsb -p tri.excmds.tabopen('images.google.com/searchbyimage?image_url=' + JS_ARG)
+bind ;gi hint -qi
+bind ;gI hint -qI
+bind ;gk hint -qk
+bind ;gy hint -qy
+bind ;gp hint -qp
+bind ;gP hint -qP
+bind ;gr hint -qr
+bind ;gs hint -qs
+bind ;gS hint -qS
+bind ;ga hint -qa
+bind ;gA hint -qA
+bind ;g; hint -q;
+bind ;g# hint -q#
+bind ;gv hint -qW mpvsafe
+bind ;gw hint -qw
+bind ;gb hint -qb
+bind ;gF hint -qb
+bind ;gf hint -q
+bind <S-Insert> mode ignore
+bind <AC-Escape> mode ignore
+bind <AC-`> mode ignore
+bind <S-Escape> mode ignore
+bind <Escape> composite mode normal ; hidecmdline
+bind <C-[> composite mode normal ; hidecmdline
+bind a current_url bmark
+bind A bmark
+bind zi zoom 0.1 true
+bind zo zoom -0.1 true
+bind zm zoom 0.5 true
+bind zr zoom -0.5 true
+bind zM zoom 0.5 true
+bind zR zoom -0.5 true
+bind zz zoom 1
+bind zI zoom 3
+bind zO zoom 0.3
+bind . repeat
+bind ;x hint -F e => { const pos = tri.dom.getAbsoluteCentre(e); tri.excmds.exclaim_quiet("xdotool mousemove --sync " + window.devicePixelRatio * pos.x + " " + window.devicePixelRatio * pos.y + "; xdotool click 1")}
+bind ;c hint -F e => { const pos = tri.dom.getAbsoluteCentre(e); tri.excmds.exclaim_quiet("xdotool mousemove --sync " + window.devicePixelRatio * pos.x + " " + window.devicePixelRatio * pos.y + "; xdotool click 3")}
+bind ;: hint -F e => { const pos = tri.dom.getAbsoluteCentre(e); tri.excmds.exclaim_quiet("xdotool mousemove --sync " + window.devicePixelRatio * pos.x + " " + window.devicePixelRatio * pos.y)}
+bind ;X hint -F e => { const pos = tri.dom.getAbsoluteCentre(e); tri.excmds.exclaim_quiet("xdotool mousemove --sync " + window.devicePixelRatio * pos.x + " " + window.devicePixelRatio * pos.y + "; xdotool keydown ctrl+shift; xdotool click 1; xdotool keyup ctrl+shift")}
+bind yq text2qr --timeout 5
+bind yo clipboard yankorg
+bind <C-v> nmode ignore 1 mode normal
+bind g! jumble
+bind ga tabaudio
+bind ;K hint -K
+bind ;Y hint -cF img i => tri.excmds.yankimage(tri.urlutils.getAbsoluteURL(i.src))
+bind ;h hint -h
+bind v hint -h
+bind ;V hint -V
+bind ;d hint -W tabopen --discard
+bind ;gd hint -qW tabopen --discard
+bind <AS-ArrowUp><AS-ArrowUp><AS-ArrowDown><AS-ArrowDown><AS-ArrowLeft><AS-ArrowRight><AS-ArrowLeft><AS-ArrowRight>ba open https://www.youtube.com/watch?v=M3iOROuTuMA
+bind m gobble 1 markadd
+bind ` gobble 1 markjump
+
+" Aliases
+alias archive js tri.excmds.open("https://web.archive.org/save/" + window.location.href)
+alias view-archive js tri.excmds.open("https://web.archive.org/*/" + window.location.href)
+alias view-google-cache js tri.excmds.open("https://www.google.com/search?q=cache:" + window.location.href)
+alias sel_su !s awk '/^set searchurls/ {gsub("searchurls.",""); print $2 }' $HOME/.config/tridactyl/tridactylrc |sort|rofi -dmenu
+command alias command
+alias au autocmd
+alias aucon autocontain
+alias audel autocmddelete
+alias audelete autocmddelete
+alias blacklistremove autocmddelete DocStart
+alias b tab
+alias clsh clearsearchhighlight
+alias nohlsearch clearsearchhighlight
+alias noh clearsearchhighlight
+alias o open
+alias w winopen
+alias t tabopen
+alias tabgroupabort tgroupabort
+alias tabgroupclose tgroupclose
+alias tabgroupcreate tgroupcreate
+alias tabgrouplast tgrouplast
+alias tabgroupmove tgroupmove
+alias tabgrouprename tgrouprename
+alias tabgroupswitch tgroupswitch
+alias tabnew tabopen
+alias tabm tabmove
+alias tabo tabonly
+alias tn tabnext_gt
+alias bn tabnext_gt
+alias tnext tabnext_gt
+alias bnext tabnext_gt
+alias tp tabprev
+alias tN tabprev
+alias bp tabprev
+alias bN tabprev
+alias tprev tabprev
+alias bprev tabprev
+alias tabfirst tab 1
+alias tablast tab 0
+alias bfirst tabfirst
+alias blast tablast
+alias tfirst tabfirst
+alias tlast tablast
+alias buffer tab
+alias bufferall taball
+alias bd tabclose
+alias bdelete tabclose
+alias quit tabclose
+alias q tabclose
+alias qa qall
+alias sanitize sanitise
+alias saveas! saveas --cleanup --overwrite
+alias tutorial tutor
+alias h help
+alias unmute mute unmute
+alias authors credits
+alias openwith hint -W
+alias ! exclaim
+alias !s exclaim_quiet
+alias containerremove containerdelete
+alias colours colourscheme
+alias colorscheme colourscheme
+alias colors colourscheme
+alias man help
+alias get_current_url js document.location.href
+alias current_url composite get_current_url | fillcmdline_notrail 
+alias stop js window.stop()
+alias zo zoom
+alias installnative nativeinstall
+alias nativeupdate updatenative
+alias mkt mktridactylrc
+alias mkt! mktridactylrc -f
+alias mktridactylrc! mktridactylrc -f
+alias mpvsafe js -p tri.excmds.shellescape(JS_ARG).then(url => tri.excmds.exclaim_quiet('mpv --no-terminal ' + url))
+alias drawingstop mouse_mode
+alias exto extoptions
+alias extpreferences extoptions
+alias extp extpreferences
+alias prefset setpref
+alias prefremove removepref
+alias tabclosealltoright tabcloseallto right
+alias tabclosealltoleft tabcloseallto left
+alias reibadailty jumble
+
+#+end_src
+** emacs
+#+INCLUDE emacs.org
+** ВЫПОЛНИТЬ scripts сделать отдельный модуль emacs calibre
+Бакап всех данных и настроек на винчестер usb 
+#+header: :tangle ~/bin/mybackup :mkdirp yes :tangle-mode "a+x"
+#+begin_src bash
+#!/usr/bin/env bash
+sudo bash <<END
+mount LABEL=manjaro /mnts || exit 1
+mount -o compress=zstd LABEL=usbdelux /mnt || exit 1
+rsync -av --delete /mnts/Data/ /mnt/Data/
+rsync -av --delete /mnts/Documents/ /mnt/Documents/
+rsync -av --delete /mnts/git/ /mnt/git/
+rsync -av --delete /mnts/iso/ /mnt/iso/
+rsync -av --delete /mnts/Downloads/ /mnt/Downloads/
+rsync -av --delete /mnts/Music/ /mnt/Music/
+rsync -av --delete /mnts/nixhome/ /mnt/nixhome/
+rsync -av --delete /mnts/Pictures/ /mnt/Pictures/
+rsync -av --delete /mnts/Videos/ /mnt/Videos/
+rsync -av --delete /mnts/Calibre/All/ /mnt/Calibre/All/
+umount /mnt
+umount /mnts
+END
+#+end_src
+Преобразование базы данных библиотеки Calibre в файл emacs org
+#+header: :tangle ~/bin/calibrebookdbtoorg :mkdirp yes :tangle-mode "a+x"
+#+begin_src bash
+  #!/usr/bin/env bash
+  if [ $# -eq 0 ];  then
+  outfile=/dev/stdout
+  else
+  outfile="$1"
+  fi
+  calibredb list --for-machine --fields all|jq -r '.[]|
+  "* "+.title,
+  ":PROPERTIES:",
+  ":Id: "+(.id|tostring),
+  ":Title: "+.title,
+  ":Author: "+.author_sort,
+  ":Tags: "+ ( .tags |join(", ")), 
+  ":My_tags: "+(. ["*tags"]|join(", ")),
+  ":Genre: "+(. ["*gnr"]|join(", ")),
+  ":Subgenre: "+(. ["*kind"]|join(", ")),
+  ":Use: "+(. ["*use"]|join(", ")),
+  ":Languages: "+ ( .languages |join(", ")), 
+  ":Pubdate: <"+(.pubdate|gsub("T.*";""))+">",
+  ":Date: <"+(.timestamp|gsub("T.*";""))+">",
+  ":Isbn: "+.isbn,
+  ":END:",
+  if .cover then  "[[file:" + (.cover|gsub("\\[";"\\[")|gsub("]";"\\]")) + "][Обложка]]" else empty end,
+  "[[file:"+(.formats[]|gsub("\\[";"\\[")|gsub("]";"\\]") +"][Формат " +(match("[^.]*$")|.string))+"]]",
+  .comments // empty' >"$outfile"
+#+end_src

@@ -1,0 +1,756 @@
+:HEADER:
+#+startup: fold
+#+startup: hideblocks
+#+startup: hidedrawers
+#+property: header-args :noweb yes
+:END:
+настройки для всех пользователей
+* модули delux
+** общие настройки
+#+header: :noweb-ref users
+#+begin_src nix
+  users.users.andrey = {
+    isNormalUser = true;
+    extraGroups = [ "wheel" "audio" "video" "docker" "networkmanager" "vboxusers"]; 
+    shell=pkgs.bashInteractive;
+  };
+  networking.hostName = as_host; 
+  time.timeZone = "Europe/Zaporozhye";
+  i18n.defaultLocale = "ru_RU.UTF-8";
+#+end_src
+** документация
+#+header: :noweb-ref mandoc
+#+begin_src nix
+  documentation.man = { enable = true; man-db.enable = false;
+  mandoc.enable = true; };
+  documentation.dev.enable = true;
+#+end_src
+** первая установленая версия и автообновления
+#+header: :noweb-ref nixos
+#+begin_src nix
+  # Это значение определяет версию NixOS, из которой по умолчанию
+  # настройки для данных с отслеживанием состояния, таких как расположение файлов и версии базы данных
+  # в вашей системе были приняты. Все в порядке, рекомендуется уйти.
+  # это значение в версии первой установки этой системы.
+  # Прежде чем менять это значение, прочтите документацию по этой опции
+  # (например, man Configuration.nix или https://nixos.org/nixos/options.html).
+  system.stateVersion = "21.11"; # Вы читали комментарий?
+  system.autoUpgrade.enable = false;
+#+end_src
+** загрузчик и ядро
+#+header: :noweb-ref boot-delux  
+#+begin_src nix
+  boot.initrd.availableKernelModules = [ "xhci_pci" "ehci_pci" "ahci" "usb_storage" "sd_mod" ];
+  boot.initrd.kernelModules = [ ];
+  boot.kernelModules = [ "kvm-intel" ];
+  boot.extraModulePackages = [ ];
+  powerManagement.cpuFreqGovernor = lib.mkDefault "ondemand";
+  boot.loader.grub.enable = true;
+  #  boot.supportedFilesystems = [ "bcachefs" ];
+  boot.loader.grub.efiSupport = false;
+  # Define on which hard drive you want to install Grub.
+  boot.loader.grub.device = "/dev/sda"; 
+  boot.loader.grub.extraEntries=''
+   menuentry "Nixos HD0" {
+      configfile (hd0,msdos1)/nixos/boot/grub/grub.cfg
+      };
+   menuentry "Nixos HD1" {
+      configfile (hd1,msdos1)/nixos/boot/grub/grub.cfg
+      };
+  '';
+#+end_src
+** filesystem файловая система
+используеться переменная nix system_disk, которая задает
+путь к системному диску
+#+BEGIN_SRC nix :noweb-ref filesystem-delux
+
+  fileSystems."/" =
+    { device = system_disk;
+      fsType = "btrfs";
+      options = [ "subvol=nixos" ];
+    };
+
+
+  fileSystems."/home" =
+    { device = system_disk;
+      fsType = "btrfs";
+      options = [ "subvol=nixhome,compress=zstd" ];
+    };
+
+  fileSystems."/home/andrey/Загрузки" =
+    { device = system_disk;
+      fsType = "btrfs";
+      options = [ "subvol=Downloads,compress=zstd" ];
+    };
+
+  fileSystems."/home/andrey/Calibre" =
+    { device = system_disk;
+      fsType = "btrfs";
+      options = [ "subvol=Calibre,compress=zstd" ];
+    };
+
+  fileSystems."/home/andrey/Data" =
+    { device = system_disk;
+      fsType = "btrfs";
+      options = [ "subvol=Data,compress=zstd" ];
+    };
+
+  fileSystems."/home/andrey/Документы" =
+    { device = system_disk;
+      fsType = "btrfs";
+      options = [ "subvol=Documents,compress=zstd" ];
+    };
+
+  fileSystems."/home/andrey/Linux" =
+    { device = system_disk;
+      fsType = "btrfs";
+      options = [ "subvol=git,compress=zstd" ];
+    };
+  fileSystems."/home/andrey/tiddlywiki" =
+    { device = system_disk;
+      fsType = "btrfs";
+      options = [ "subvol=tiddlywiki,compress=zstd" ];
+    };
+
+  fileSystems."/home/andrey/Containers/iso" =
+    { device = system_disk;
+      fsType = "btrfs";
+      options = [ "subvol=iso" ];
+    };
+
+  fileSystems."/home/andrey/Музыка" =
+    { device = system_disk;
+      fsType = "btrfs";
+      options = [ "subvol=Music" ];
+    };
+
+
+  fileSystems."/home/andrey/Изображения" =
+    { device = system_disk;
+      fsType = "btrfs";
+      options = [ "subvol=Pictures" ];
+    };
+
+  fileSystems."/home/andrey/Видео" =
+    { device = system_disk;
+      fsType = "btrfs";
+      options = [ "subvol=Videos" ];
+    };
+
+    zramSwap.enable=true;
+
+#+end_src
+** services
+*** sound
+#+begin_src nix :noweb-ref services-delux
+  services.pipewire.enable=true;
+  services.pipewire.wireplumber.enable=true;
+  services.pipewire.pulse.enable=true;
+  
+  services.speechd.enable = true; 
+#  environment.etc."speech-dispatcher/speechd.conf".text=''
+#    DefaultModule "rhvoice"
+#    AddModule "rhvoice" "sd_rhvoice" "rhvoice.conf"
+#  '';
+
+#+end_src
+*** ssh
+#+begin_src nix :noweb-ref services-delux
+services.sshd.enable = true;
+#+end_src
+*** samba
+#+begin_src nix :noweb-ref services-delux
+  services.samba.enable=true;
+  services.samba.openFirewall=true;
+#  services.samba.securityType="user";
+  services.samba.settings ={ public =
+      { path = "/home/andrey";
+#      "read only" = "yes";
+       browseable = "yes";
+#      global.security="user";
+      comment = "Public samba share.";
+#      "guest ok" = "yes";
+      };
+     global.security="user";
+    };
+
+#+end_src
+*** Сеть
+#+begin_src :noweb-ref services-delux
+  networking.networkmanager.enable = true;
+  networking.firewall.enable = false;
+  services.tor.enable = true;
+  services.tor.client.dns.enable = true;
+#+end_src
+*** x11
+#+begin_src nix :noweb-ref services-delux
+  services.xserver.enable = true;
+  services.xserver.xkb.layout = "us,ua";
+  services.xserver.xkb.variant = "rus";
+  services.xserver.xkb.options = "grp:rctrl_rshift_toggle,nbsp:level3,lv3:ralt_switch, ctrl:nocaps";
+  services.xserver.displayManager.lightdm.enable = true;
+  services.displayManager.autoLogin.enable = true;
+  services.displayManager.autoLogin.user = "andrey";
+  services.displayManager.defaultSession = "xfce";
+ 
+  services.xserver.desktopManager.xfce.enable = true;
+  services.xserver.desktopManager.xfce.noDesktop = false;
+
+  xdg.portal.extraPortals= [
+                             pkgs.xdg-desktop-portal-gnome
+			      ];
+  xdg.portal.enable=true;
+
+    services.picom = {
+    enable = true;
+    backend = "glx";
+    shadow = true;
+    shadowExclude = [
+      "_GTK_FRAME_EXTENTS@:c"
+      "class_g = '.ulauncher-wrapped'"
+      "class_g = 'conky'"
+      "class_g = 'Peek'"
+      "class_g = 'Ulauncher'"
+      "class_g = 'gromit-mpx'"
+      "class_g = 'i3-frame'"
+      "name = 'Polybar tray window'"
+      "name = 'polybar-blur-noshadow'"
+      "name = 'polybar-noblur-noshadow'"
+    ];
+  opacityRules = [
+  "90:class_g = 'conky'"
+];
+  };
+
+#+end_src
+*** emacs
+#+begin_src nix :noweb-ref services-delux
+services.emacs.enable=true;
+services.emacs.startWithGraphical=true;
+services.emacs.defaultEditor=true;
+#+end_src
+*** virtualizsation
+#+begin_src nix :noweb-ref services-delux
+virtualisation.docker = {
+    enable = true;
+    enableOnBoot = true;
+  };
+#  virtualisation.libvirtd.enable = true;
+services.flatpak.enable = true; 
+#+end_src
+*** озвучивание времени каждые полчаса
+#+header: :noweb-ref services-delux 
+#+begin_src nix
+systemd.services.speak-time = {
+    description = "Speak Time Service";
+    path = [ pkgs.bash ];
+    script = ''
+      #!${pkgs.bash}/bin/bash
+      current_time=$(date +"%-Iчасов:%-Mминут")
+      echo "Сейчас $current_time" | ${pkgs.rhvoice}/bin/RHVoice-test -p aleksandr
+    '';
+    serviceConfig = {
+      Type = "oneshot";
+    };
+  };
+
+  systemd.timers.speak-time = {
+    description = "Run speak-time service every 30 minutes";
+    wantedBy = [ "timers.target" ];
+    timerConfig = {
+      OnCalendar = "*-*-* *:00,*:30:00";
+      Persistent = true;
+    };
+  };
+
+  systemd.services.speak-time.wantedBy = [ "multi-user.target" ];
+#+end_src
+*** locate
+#+header: :noweb-ref services-delux
+#+begin_src nix
+services.locate={
+    enable=true;
+    prunePaths=[
+    "/home/andrey/Calibre"
+    "/home/andrey/Музыка"
+    "/home/andrey/.cache"
+    "/home/andrey/.kodi"
+    "/home/andrey/.mozilla"
+    "/home/andrey/.librewolf"
+    "/home/andrey/.local/Chromium"
+  ];
+};  
+#+end_src   
+** enviroments
+variables
+#+begin_src nix :noweb-ref enviroments-delux
+  environment.variables =  {
+#      EDITOR = "emacs -nw";
+       VISUAL = "emacsclient -c";
+       TERM = "xterm-256color";
+      TERMCMD = "kitty";
+      PATH="$HOME/.local/texlive/2024/bin:$PATH";
+    };
+
+#+end_src
+shells
+#+begin_src nix :noweb-ref enviroments-delux
+     environment.shells = [ pkgs.bashInteractive ];
+    
+     environment.homeBinInPath = true;
+     environment.localBinInPath = true;
+#+end_src
+aliases
+#+begin_src nix :noweb-ref enviroments-delux
+
+     environment.shellAliases =  {
+      
+
+      h = "history ";
+      p = "ps -ax ";
+      q = "exit";
+      sdwn = "shutdown -h 0";
+      lsp = "netstat -tupln";
+      i = "ipython ";
+      r = "ranger";
+      p6 = "raku";
+      c = "clifmrun"; 
+      ffp = "ffmpeg -i $(xclip -o -sel cli) ";
+      yt = "yt-dlp ";
+      ytp="yt-dlp $(xclip -o -sel cli) ";
+      wgp = "wget -Erkp -np -w 1 $(xclip -o -sel cli) "; 
+      
+      
+#      ocrre = "ocrmypdf --output-type=pdfa-2  --pdfa-image-compression=jpeg -O 2  -d -c -l rus+eng --unpaper-args '--layout double' ";
+#      ocrr = "ocrmypdf --output-type=pdfa-2  --pdfa-image-compression=jpeg -O 2  -d -c -l rus --unpaper-args '--layout double' ";
+#      ocre = "ocrmypdf --output-type=pdfa-2  --pdfa-image-compression=jpeg -O 2  -d -c -l eng --unpaper-args '--layout double' ";
+#      ocru = "ocrmypdf --output-type=pdfa-2  --pdfa-image-compression=jpeg -O 2  -d -c -l ukr --unpaper-args '--layout double' ";
+#      ocrue = "ocrmypdf --output-type=pdfa-2  --pdfa-image-compression=jpeg -O 2  -d -c -l ukr+eng --unpaper-args '--layout double' ";
+      p6doc = "docker run --rm -d -p 3000:3000 jjmerelo/perl6-doc ";
+
+      nh = "nix-hash --type sha256 --base32 ";
+      ns = "nix-shell ";
+      nr = "sudo nixos-rebuild switch";
+      nru = "sudo nixos-rebuild switch --upgrade-all";
+      ne = "nix-env ";
+      nei = "nix-env -iA";
+      neq = "nix-env -q ";
+      nee = "nix-env -e ";
+      ncg = "sudo nix-collect-garbage ";
+
+      gta = "git add ";
+      gtc = "git commit ";
+      gts = "git status ";
+      gtgh = "git push ";
+      ghgt = "git pull ";
+      gtr = "git rm ";
+      gtu = "git restore ";
+      gpp = "git clone $(xclip -o -sel cli) ";
+      
+      dcu = "docker-compose up  --build -d ";
+      dcd = "docker-compose down ";
+      dcr = "docker-compose restart ";
+      
+      dps  = "docker ps -a ";
+      dil = "docker image list ";
+      dip = "docker image prune ";
+      dir = "docker rmi ";
+
+      ag = "alias|grep ";
+      pg = "ps -ax|grep ";
+      hg = "history|grep ";
+      eg = "env|grep ";
+    };
+#+end_src
+** packages
+*** Сеть
+#+begin_src nix :noweb-ref packages-delux
+    #Утилиты
+    inetutils # базовые  - ping (проверка доступности узла),
+              # ftp (клиент для передачи файлов),
+              # telnet (подключение к удалённым серверам),
+              # traceroute (трассировка маршрута),
+              #  rsh, rlogin (удалённый доступ, устаревшие),
+              #  hostname, ifconfig (настройка сети).
+    tcpdump # Анализ сетевого трафика в реальном времени через CLI  
+    nethogs # 
+    whatweb # технологии на веб-сайтах (CMS, серверы, frameworks)
+
+
+    # загрузка файлов
+    wget 
+    curl 
+    aria2 
+    yt-dlp
+    
+   #Браузеры
+   #тестовый интернет браузер
+    w3m 
+   # браузеры на базе firefox
+    firefox
+    librewolf
+  # расширения браузера firefox  
+    tridactyl-native
+  # браузеры на базе chromium
+    chromium 
+#    qutebrowser
+    nyxt 
+    tdesktop # Telegram-Desktop
+    crow-translate # онлайн перевод выделенного текста no guix  
+#+end_src
+*** коммандная строка
+#+begin_src nix :noweb-ref packages-delux
+    kitty # терминал
+    old.satty # аннотация скриншотов 
+    bat highlight    # cli подсветка синтаксиса текстовых файлов
+#+end_src
+*** шрифты
+#+begin_src nix :noweb-ref packages-delux
+    font-manager # менеджер шрифтов no guix
+    fontpreview # nnn depend optinal viewer  no guix
+    google-fonts
+    noto-fonts
+#    libration_ttf
+    ubuntu_font_family
+    ucs-fonts
+    cm_unicode
+    open-fonts
+    terminus_font # шрифт
+    terminus_font_ttf # шрифт
+    nerd-fonts.hack
+#    nerdfonts # шрифты
+#+end_src
+*** X11
+#+begin_src nix :noweb-ref packages-delux
+    copyq # продвинутый менеджер буфера обмена
+#    xsane # работа со сканером
+    dconf
+    gnome-control-center
+    glib-networking
+    dconf-editor
+    zenity # gui диалоги
+    ncurses # создание tui 
+   kbdd # сохраняет в каждом окне свою раскладку
+   xclip # работа з буфером обмена
+   xdg-utils # работа с mime файлами
+   xorg.libX11 
+   xorg.libXft 
+   xorg.libXinerama # для X11
+   xorg.libXrandr # для X11
+   xorg.libXScrnSaver # для X11
+   xorg.xmessage 
+   xorg.xkill 
+   xdotool # работа с окнами X11
+   xorg.xev # просмотр событий окна
+   wmctrl
+  
+   xfce.xfce4-panel 
+   xfce.xfce4-timer-plugin
+   xfce.xfce4-genmon-plugin
+   xfce.xfce4-weather-plugin
+   xfce.xfce4-netload-plugin
+   xfce.xfce4-fsguard-plugin
+   xfce.xfce4-verve-plugin
+   xfce.xfce4-xkb-plugin
+   xfce.xfce4-whiskermenu-plugin
+   xfce.xfce4-sensors-plugin
+   xfce.xfce4-pulseaudio-plugin
+   xfce.xfce4-datetime-plugin
+   xfce.xfce4-volumed-pulse
+   xfce.thunar-volman
+   xfce.thunar-archive-plugin
+   xfce.thunar-media-tags-plugin
+   ueberzugpp
+#+end_src
+*** файлы
+#+begin_src nix :noweb-ref packages-delux
+#    pcmanfm
+#    ranger
+    file # информация о типе файла
+    mediainfo # информация о медиафайлах
+    clifm
+#    yazi
+    zoxide #?
+    ripgrep
+    fd # продвинутая find
+    rich-cli #?  
+    rofi # меню для запуска программ
+    mlocate  
+#+end_src
+*** mix
+#+begin_src nix :noweb-ref packages-delux
+    autojump # быстрый переход в командной оболочке
+    bleachbit # чистка от мусора no guix
+    btrfs-progs # работа с файловой системой btrfs
+    conky #  отображение информационных панелей
+    coreutils 
+    dmenu # мени для х11
+    fzf #cmd fuzzy finder
+    glib
+    gparted # редактирование разделов диска
+    htop # просмотр процессов
+    keepassxc # менеджер паролей 
+    killall # завершение процессов
+    libnotify # сообщения нотификации
+    lsof # просмотр открытих файлов
+    lshw
+#    navi #шпаргалка !!!
+    perl540Packages.FileMimeInfo #mimeopen mimeinfo
+    pmount # монтирование дисков
+    tree # просмотр дерева каталогов
+    usbutils # работа с usb
+    util-linux # разные полезные утититы
+    czkawka #поиск дубликатов,  похожих  и ненужных файлов 
+    nix-search-cli
+#+end_src
+*** разработка
+#+begin_src nix :noweb-ref packages-delux
+    cmake  # для разрабочиков ПО
+    gcc_multi # для разрабочиков ПО
+    gitFull # git
+    go
+    gnumake # для разрабочиков ПО
+    nodejs
+    postgresql # сервер базы данных
+    (python312.withPackages (subpkgs: with subpkgs; [
+      jupyter-all
+      ranger
+      beautifulsoup4
+      nltk
+      transformers
+      spacy
+#      gensim
+      stanza
+      fasttext
+      langdetect
+      langid
+      ipython
+      html2text
+      ocrmypdf 
+      pandoc-xnos
+      pdf2docx
+      weasyprint
+  
+    ]))
+#    polyglot
+    pipx 
+    sqlite # работа з базой данных
+    sqlitebrowser # просмотр базы данных
+    jq
+    sbcl
+    asdf  
+#+end_src
+*** архивы
+#+begin_src nix :noweb-ref packages-delux
+    archivemount # монтирование cpio, .tar.gz, .tar.bz2
+    atool # монтирование архивов 
+    avfs # монтирование архивов
+    unzip # архиватор
+    unrar #архиватор
+    zip # архиватор
+    p7zip # архиватор
+#+end_src
+*** медиа
+#+begin_src nix :noweb-ref packages-delux
+    deadbeef # медиаплеер и конвертор музыки
+    easytag # редактор музыкальных тегов
+    ffmpeg # редактор командной строки видео и аудио
+    ffmpegthumbnailer # скины видео
+    feh # просмотр изображений
+    gimp-with-plugins # графический редактор Gimp
+    imagemagick # обрабока изображений
+    jbig2enc 
+    jbig2dec
+    lame # конвертирование медиа кодек
+    mpv # видеоплеер
+    sxiv # просмотр изображений
+#    strawberry # аудиоплеер с созданием базы музыки 
+#    kodi # медиокомплекс
+    rhvoice #звуковые движки
+    beets
+#+end_src
+*** офис текст
+#+begin_src nix :noweb-ref packages-delux
+    aspell # прогамма проверки правописания
+    aspellDicts.en aspellDicts.ru aspellDicts.uk  # словари aspell
+    hunspellDicts.en-us  hunspellDicts.ru-ru   hunspellDicts.uk-ua # словари hunspell
+    emacs # Текстовый редактор
+    calibre # библиотека книг old wer guix
+    catdoc # конвертирование документов Майкрософт Офис в текст
+    djvu2pdf # конвертор djvu в pdf
+    djvulibre # работа з djvu
+    epub2txt2
+    epub-thumbnailer  
+ #   ghostwriter #
+ #   glow #Render markdown on the CLI, nnn view no guix
+    htmlq
+    jp # for cli view json no guix
+    libreoffice # бесплатный офис
+    libretranslate
+#    marktext 
+    miller # обработка файлов csv, json ...no guix
+    mupdf # обработка pdf
+    odt2txt # преобразование документов libreoffice в текст
+    old.okular # просмотр документов
+    pandoc
+    pistol # для просмотра файлов no guix
+    poppler # обработка pdf
+    poppler_utils
+    pdftk
+    pdf2odt
+    pdfchain
+    qpdf
+    python312Packages.html2text
+    python312Packages.ocrmypdf #no guix
+    python312Packages.pandoc-xnos
+    python312Packages.pdf2docx
+    python312Packages.weasyprint
+    sigil # редактор книг epub no guix
+    (texliveFull.withPackages (ps: with ps; [babel-russian babel-ukrainian babel-english
+             xunicode cyrillic  polyglossia latex-fonts]))
+    vim_configurable # текстовый редактор
+    whisper-ctranslate2
+    zathura # просмотр pdf
+    recoll
+#+end_src
+*** все пакеты
+#+name: all-packages-delux
+#+begin_src nix 
+nixpkgs.config.allowUnfree = true;
+environment.systemPackages = with pkgs; [
+<<packages-delux>> 
+  ];
+#+end_src
+* конфигуация программ системы
+#+header: :tangle ~/Linux/nixosconfig/delux-nix/programm-configs.nix :noweb yes :mkdirp yes
+#+begin_src nix
+{ config, pkgs, ... }:
+{ 
+  imports =
+    [ 
+        ./as-clifm.nix
+    ];
+
+<<programs>>
+}
+#+end_src
+
+mtr gnupg
+#+BEGIN_SRC nix :noweb-ref programs 
+  programs.mtr.enable = true;
+  programs.gnupg.agent = {
+    enable = true;
+    enableSSHSupport = true;
+   };
+#+end_src
+chromium
+#+BEGIN_SRC nix :noweb-ref programs 
+programs.chromium.enable = true;
+programs.chromium.extraOpts = {
+  "SyncDisabled" = true;
+  "PasswordManagerEnabled" = false;
+  "SpellcheckEnabled" = true;
+  "SpellcheckLanguage" = [
+    "ru"
+    "en-US"
+    "uk"
+  ];
+};
+#+END_SRC
+clifm
+#+BEGIN_SRC nix :tangle ~/Linux/nixosconfig/delux-nix/as-clifm.nix :noweb yes :mkdirp yes
+{pkgs, lib, ...}:
+let as-clifm=pkgs.clifm.overrideAttrs (oldAttrs: {
+       postBuild = (oldAttrs.postBuild or "") + ''
+       mkdir -p $out/bin
+      cp ${pkgs.clifm}/share/clifm/plugins/clifmrun $out/bin/
+      cp ${pkgs.clifm}/share/clifm/plugins/clifmimg $out/bin/
+    '';
+  });
+ in { 
+environment.systemPackages = [ as-clifm ];
+}  
+#+END_SRC
+
+appimage
+#+BEGIN_SRC nix :noweb-ref programs 
+programs.appimage.enable = true;
+#+END_SRC
+
+
+* delux - компʼютер с внутреннего диска
+#+header: :tangle ~/Linux/nixosconfig/delux-nix/configuration.nix :mkdirp yes :noweb yes
+#+begin_src nix
+{ config, pkgs, lib, ... }:
+let as_host="delux";
+system_disk= "/dev/disk/by-uuid/bb4cca63-bde0-4af7-855e-af49a68efef8";  
+unstable = import <unstable> {};
+old = import <old> {};  
+in { 
+
+  imports =
+    [ 
+        ./programm-configs.nix
+    ];
+
+<<users>>
+<<mandoc>>
+<<nixos>>
+<<boot-delux>>
+<<filesystem-delux>>
+<<services-delux>>
+<<enviroments-delux>>
+<<all-packages-delux>>
+}
+#+end_src
+
+* delux-usb - компʼютер с usb  диска 
+#+header: :tangle ~/Linux/nixosconfig-test/delux-nix-usb/configuration.nix :mkdirp yes
+#+begin_src nix
+{ config, pkgs, ... }:
+let as_host="delux usb";
+system_disk="/dev/disk/by-uuid/b6affbcd-6022-4593-a686-3070bdc8bc64";
+unstable = import <unstable> {};
+old = import <old> {};
+  
+in { 
+
+  imports =
+    [ 
+        ./programm-configs.nix
+    ];
+
+<<users>>
+<<mandoc>>
+<<nixos>>
+<<boot-delux>>
+<<filesystem-delux>>
+<<services-delux>>
+<<enviroments-delux>>
+<<all-packages-delux>>
+}
+#+end_src
+* samsung r60 ноутбук
+#+header: :tangle ~/Linux/nixosconfig-test/samsungr60/configuration.nix :mkdirp yes
+#+begin_src nix
+{ config, pkgs, ... }:
+let as_host="samsumg";
+unstable = import <unstable> {};
+in { 
+<<users>>
+<<mandoc>>
+<<nixos>>  
+}
+#+end_src
+* android
+,#+header: :tangle ~/Linux/nixosconfig-test/android/configuration.nix :mkdirp yes
+#+begin_src nix
+{ config, pkgs, ... }:
+let as_host="delux";
+unstable = import <unstable> {};
+in { 
+<<users>>
+<<mandoc>>
+<<nixos>>  
+}
+#+end_src
