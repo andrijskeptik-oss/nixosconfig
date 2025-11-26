@@ -387,16 +387,18 @@ aliases
    #тестовый интернет браузер
     w3m 
    # браузеры на базе firefox
-    firefox
+#    firefox
     librewolf
   # расширения браузера firefox  
     tridactyl-native
   # браузеры на базе chromium
-    chromium 
-#    qutebrowser
+#    chromium 
+    qutebrowser
     nyxt 
-    tdesktop # Telegram-Desktop
-    crow-translate # онлайн перевод выделенного текста no guix  
+# прочее
+   tdesktop # Telegram-Desktop
+   crow-translate # онлайн перевод выделенного текста
+   tg # cli telegram клиент  
 #+end_src
 *** коммандная строка
 #+begin_src nix :noweb-ref packages-delux
@@ -617,41 +619,40 @@ aliases
 *** мои пакеты и сервисы
 **** cortile
 пакет
+#+header: :tangle ~/Linux/nixosconfig/delux-nix/pkgs/cortile/default.nix :noweb yes :mkdirp yes
 #+begin_src nix
 { lib, stdenv, buildGoModule, fetchFromGitHub }:
 
 buildGoModule rec {
   pname = "cortile";
-  version = "unstable-2024-10-10"; # Вкажіть актуальну версію/дату
+  version = "2.5.2"; 
 
   # 1. Отримання вихідного коду з GitHub
   src = fetchFromGitHub {
     owner = "leukipp";
     repo = pname;
-    # Використовуйте актуальний хеш (SHA-256) останнього коміту.
-    # Отримайте його за допомогою nix-prefetch-url --unpack <URL>
-    rev = "0320f7868511488c9f0c7e2c943171882d8c9735"; # ПРИКЛАД: Замініть на актуальний коміт!
-    hash = "sha256-VjG8WjU2Vw3q7xYfX7f1lM5t5oQ1gG1o4L8H7Xo9X7E="; # ПРИКЛАД: Замініть на актуальний хеш!
+    rev = "96a0eddbaf37706a7ed64ffdf93cfc675e144730"; # ПРИКЛАД: Замініть на актуальний коміт!
+    hash = "sha256-2/U7oQO2vOrmoPR+s9VMSWS+d/YqZ5Ic0ieSxSA6SP4="; # ПРИКЛАД: Замініть на актуальний хеш!
   };
 
   # 2. Перевірка залежностей Go Modules
   # Ця частина є критичною для Golang-додатків. Вона гарантує,
   # що всі Go-залежності, перелічені у go.mod/go.sum, завантажуються в Nix store.
-  vendorHash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+  vendorHash = "sha256-VlIPsUogiCQeWWrFsueB6COa91CWIGx3hb7HKC59rS0=";
   # ПРИМІТКА: Щоб отримати правильний vendorHash:
   # 1. Залиште його як "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
   # 2. Спробуйте зібрати пакет: nix-build
   # 3. Nix покаже помилку з правильним хешем. Замініть заглушку на цей правильний хеш.
 
   # 3. Етапи збирання
-  # Оскільки Cortile, ймовірно, є простим Go-додатком, mkDerivation
+  # mkDerivation
   # зазвичай автоматично компілює бінарник. Додатковий етап installPhase
   # потрібен лише для того, щоб помістити бінарник у $out/bin.
-  installPhase = ''
-    mkdir -p $out/bin
-    # Припускаємо, що бінарник називається cortile і створюється у поточній директорії
-    mv $pname $out/bin/
-  '';
+#  installPhase = ''
+#    mkdir -p $out/bin
+#    # Припускаємо, що бінарник називається cortile і створюється у поточній директорії
+#    mv $pname $out/bin/
+#  '';
 
   # 4. Метадані
   meta = with lib; {
@@ -662,37 +663,15 @@ buildGoModule rec {
   };
 }
 #+end_src
-#+begin_src nix
-# Файл: /etc/nixos/configuration.nix або інший модуль
-
-{ config, pkgs, ... }:
-
-let
-  # 1. Імпортуємо деривацію Cortile
-  cortile-pkg = pkgs.callPackage /шлях/до/вашого/default.nix {};
-in
-{
-  # 2. Додаємо пакет до системи (щоб його бінарний файл був доступний)
-  environment.systemPackages = [ cortile-pkg ];
-
-  # ...
-}
-#+end_src  
 сервис
+#+header: :noweb-ref services-delux
 #+begin_src nix 
-# У тому ж файлі конфігурації
 
-{ config, pkgs, ... }:
-
+  systemd.user.services.cortile = 
 let
-  cortile-pkg = pkgs.callPackage /шлях/до/вашого/default.nix {};
+cortile-pkg = pkgs.callPackage ./pkgs/cortile/default.nix {};
 in
 {
-  # ... (ваш environment.systemPackages)
-
-  # --- КОНФІГУРАЦІЯ СЕРВІСУ ---
-
-  systemd.user.services.cortile = {
     # Опис сервісу
     description = "Cortile Tiling Window Manager Helper";
 
@@ -712,10 +691,10 @@ in
     # Секція [Install]
     # Визначає, коли сервіс має бути активований.
     # graphical-session.target гарантує запуск після старту графічної сесії користувача.
-    installFlags = [ "start" ]; # Запуск сервісу після створення
+#    installFlags = [ "start" ]; # Запуск сервісу після створення
     wantedBy = [ "graphical-session.target" ];
   };
-} 
+ 
 #+end_src
 *** все пакеты
 #+name: all-packages-delux
