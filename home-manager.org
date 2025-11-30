@@ -250,11 +250,23 @@ c.tabs.mousewheel_switching = False
 # c.url.start_pages = ['/home/andrey/tiddlywiki/notes.html']
 
 c.window.title_format = '{perc}{current_title}'
-c.fileselect.folder.command=['bash','-c','kitty ranger --chooser-file {}' ]
-c.fileselect.single_file.command=['bash','-c','kitty yazi --chooser-file {} /home/andrey/Загрузки/' ]
-c.fileselect.multiple_files.command=['bash','-c','kitty yazi --chooser-file {} /home/andrey/Загрузки/' ]
+#c.fileselect.folder.command=['bash','-c','kitty ranger --chooser-file {}' ]
+#c.fileselect.single_file.command=['bash','-c','kitty yazi --chooser-file {} /home/andrey/Загрузки/' ]
+#c.fileselect.multiple_files.command=['bash','-c','kitty yazi --chooser-file {} /home/andrey/Загрузки/' ]
 c.fileselect.handler='external'
 
+select_in_emacs_command = [
+    'emacsclient', '-e','-c', '(progn (setq qutebrowser-select-files  "{}") (dirvish "/home/andrey/Загрузки/"))'
+]
+c.fileselect.single_file.command=select_in_emacs_command
+c.fileselect.multiple_files.command=select_in_emacs_command
+c.fileselect.folder.command=select_in_emacs_command
+
+
+
+
+
+  
 #+end_src
 **** Назначение клавиш
 ***** Открыть uri
