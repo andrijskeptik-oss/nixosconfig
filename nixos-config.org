@@ -5,18 +5,38 @@
 #+property: header-args :noweb yes
 :END:
 настройки для всех пользователей
-* модули delux
+* модули vingo
 ** общие настройки
 #+header: :noweb-ref users
 #+begin_src nix
   users.users.andrey = {
     isNormalUser = true;
+    description = "andrey";
     extraGroups = [ "wheel" "audio" "video" "docker" "networkmanager" "vboxusers"]; 
-    shell=pkgs.bashInteractive;
+    packages = with pkgs; [
+    ];
+###    shell=pkgs.bashInteractive;
   };
-  networking.hostName = as_host; 
-  time.timeZone = "Europe/Zaporozhye";
-  i18n.defaultLocale = "ru_RU.UTF-8";
+   programs.firefox.enable = true;
+   networking.hostName = as_host; 
+  # Set your time zone.
+  time.timeZone = "Europe/Kyiv";
+
+  # Select internationalisation properties.
+  i18n.defaultLocale = "ru_UA.UTF-8";
+
+  i18n.extraLocaleSettings = {
+    LC_ADDRESS = "uk_UA.UTF-8";
+    LC_IDENTIFICATION = "uk_UA.UTF-8";
+    LC_MEASUREMENT = "uk_UA.UTF-8";
+    LC_MONETARY = "uk_UA.UTF-8";
+    LC_NAME = "uk_UA.UTF-8";
+    LC_NUMERIC = "uk_UA.UTF-8";
+    LC_PAPER = "uk_UA.UTF-8";
+    LC_TELEPHONE = "uk_UA.UTF-8";
+    LC_TIME = "uk_UA.UTF-8";
+  };
+
 #+end_src
 ** документация
 #+header: :noweb-ref mandoc
@@ -34,177 +54,272 @@
   # это значение в версии первой установки этой системы.
   # Прежде чем менять это значение, прочтите документацию по этой опции
   # (например, man Configuration.nix или https://nixos.org/nixos/options.html).
-  system.stateVersion = "21.11"; # Вы читали комментарий?
+  system.stateVersion = "25.11"; # Вы читали комментарий?
   system.autoUpgrade.enable = false;
 #+end_src
-** загрузчик и ядро
-#+header: :noweb-ref boot-delux  
+** оборудование загрузчик и ядро
+#+header: :noweb-ref boot-vingo  
 #+begin_src nix
-  boot.initrd.availableKernelModules = [ "xhci_pci" "ehci_pci" "ahci" "usb_storage" "sd_mod" ];
-  boot.initrd.kernelModules = [ ];
-  boot.kernelModules = [ "kvm-intel" ];
-  boot.extraModulePackages = [ ];
-  powerManagement.cpuFreqGovernor = lib.mkDefault "ondemand";
-  boot.loader.grub.enable = true;
-  #  boot.supportedFilesystems = [ "bcachefs" ];
-  boot.loader.grub.efiSupport = false;
-  # Define on which hard drive you want to install Grub.
-  boot.loader.grub.device = "/dev/sda"; 
-  boot.loader.grub.extraEntries=''
-   menuentry "Nixos HD0" {
-      configfile (hd0,msdos1)/nixos/boot/grub/grub.cfg
-      };
-   menuentry "Nixos HD1" {
-      configfile (hd1,msdos1)/nixos/boot/grub/grub.cfg
-      };
-  '';
+  boot.loader.systemd-boot.enable = true;
+  boot.loader.efi.canTouchEfiVariables = true;
+
+  # Use latest kernel.
+  boot.kernelPackages = pkgs.linuxPackages_latest;
+  boot.kernelModules = [ "btusb" ];
+  hardware.enableAllFirmware = true;
+   #  Включаем графический драйвер (Hardware Acceleration)
+  hardware.graphics = {
+    enable = true;
+    enable32Bit = true; # Важно для Steam и старых игр
+  };
+  hardware.nvidia = {
+    # Режимы управления питанием и настройки (рекомендуется для стабильности)
+    modesetting.enable = true;
+    powerManagement.enable = false;
+    open = false; # Используйте true только для новых карт (RTX 20xx+)
+    nvidiaSettings = true;
+    
+    # Выбор версии драйвера (обычно stable — лучший выбор)
+    package = config.boot.kernelPackages.nvidiaPackages.stable;
+  };
+  # Включает поддержку Bluetooth
+  hardware.bluetooth.enable = true;
+
+  # (Опционально) Автоматическое включение Bluetooth при загрузке
+  hardware.bluetooth.powerOnBoot = true;
+
 #+end_src
 ** filesystem файловая система
 используеться переменная nix system_disk, которая задает
 путь к системному диску
-#+BEGIN_SRC nix :noweb-ref filesystem-delux
-
+#+BEGIN_SRC nix :noweb-ref filesystem-vingo
   fileSystems."/" =
     { device = system_disk;
       fsType = "btrfs";
-      options = [ "subvol=nixos" ];
+      options = [ 
+        "subvol=@" 
+        "compress-force=zstd:1"  # Включаем быстрое сжатие
+        "noatime"          # Отключаем запись времени доступа (еще быстрее)
+         "ssd"              # Оптимизация под SSD
+         "discard=async"    # Фоновая очистка удаленных данных (TRIM)
+       ];
     };
-
 
   fileSystems."/home" =
     { device = system_disk;
       fsType = "btrfs";
-      options = [ "subvol=nixhome,compress=zstd" ];
-    };
-
-  fileSystems."/home/andrey/Загрузки" =
-    { device = system_disk;
-      fsType = "btrfs";
-      options = [ "subvol=Downloads,compress=zstd" ];
-    };
-
-  fileSystems."/home/andrey/Calibre" =
-    { device = system_disk;
-      fsType = "btrfs";
-      options = [ "subvol=Calibre,compress=zstd" ];
-    };
-
-  fileSystems."/home/andrey/Data" =
-    { device = system_disk;
-      fsType = "btrfs";
-      options = [ "subvol=Data,compress=zstd" ];
-    };
-
-  fileSystems."/home/andrey/Документы" =
-    { device = system_disk;
-      fsType = "btrfs";
-      options = [ "subvol=Documents,compress=zstd" ];
+      options = [ 
+        "subvol=@home" 
+        "compress-force=zstd:1"  # Включаем быстрое сжатие
+        "noatime"          # Отключаем запись времени доступа (еще быстрее)
+         "ssd"              # Оптимизация под SSD
+         "discard=async"    # Фоновая очистка удаленных данных (TRIM)
+       ];
     };
 
   fileSystems."/home/andrey/Linux" =
     { device = system_disk;
       fsType = "btrfs";
-      options = [ "subvol=git,compress=zstd" ];
-    };
-  fileSystems."/home/andrey/tiddlywiki" =
-    { device = system_disk;
-      fsType = "btrfs";
-      options = [ "subvol=tiddlywiki,compress=zstd" ];
+      options = [ 
+        "subvol=Linux" 
+        "compress-force=zstd:1"  # Включаем быстрое сжатие
+        "noatime"          # Отключаем запись времени доступа (еще быстрее)
+         "ssd"              # Оптимизация под SSD
+         "discard=async"    # Фоновая очистка удаленных данных (TRIM)
+       ];
     };
 
-  fileSystems."/home/andrey/Containers/iso" =
+  fileSystems."/home/andrey/Загрузки" =
     { device = system_disk;
       fsType = "btrfs";
-      options = [ "subvol=iso" ];
+      options = [ 
+        "subvol=Downloads" 
+        "compress-force=zstd:1"  # Включаем быстрое сжатие
+        "noatime"          # Отключаем запись времени доступа (еще быстрее)
+         "ssd"              # Оптимизация под SSD
+         "discard=async"    # Фоновая очистка удаленных данных (TRIM)
+       ];
+    };
+
+  fileSystems."/home/andrey/Документы" =
+    { device = system_disk;
+      fsType = "btrfs";
+      options = [ 
+        "subvol=Documents" 
+        "compress-force=zstd:1"  # Включаем быстрое сжатие
+        "noatime"          # Отключаем запись времени доступа (еще быстрее)
+         "ssd"              # Оптимизация под SSD
+         "discard=async"    # Фоновая очистка удаленных данных (TRIM)
+       ];
+    };
+
+  fileSystems."/home/andrey/Data" =
+    { device = data_disk;
+      fsType = "btrfs";
+      options = [ 
+        "subvol=Data" 
+        "compress-force=zstd:3"  # Включаем быстрое сжатие
+        "noatime"          # Отключаем запись времени доступа (еще быстрее)
+         "discard=async"    # Фоновая очистка удаленных данных (TRIM)
+       ];
+    };
+
+  fileSystems."/home/andrey/Изображения" =
+    { device = data_disk;
+      fsType = "btrfs";
+      options = [ 
+        "subvol=Pictures" 
+        "compress-force=zstd:3"  # Включаем быстрое сжатие
+        "noatime"          # Отключаем запись времени доступа (еще быстрее)
+         "discard=async"    # Фоновая очистка удаленных данных (TRIM)
+       ];
+    };
+  
+  fileSystems."/home/andrey/Видео" =
+    { device = data_disk;
+      fsType = "btrfs";
+      options = [ 
+        "subvol=Videos" 
+        "compress-force=zstd:3"  # Включаем быстрое сжатие
+        "noatime"          # Отключаем запись времени доступа (еще быстрее)
+         "discard=async"    # Фоновая очистка удаленных данных (TRIM)
+       ];
     };
 
   fileSystems."/home/andrey/Музыка" =
-    { device = system_disk;
+    { device = data_disk;
       fsType = "btrfs";
-      options = [ "subvol=Music" ];
+      options = [ 
+        "subvol=Music" 
+        "compress-force=zstd:3"  # Включаем быстрое сжатие
+        "noatime"          # Отключаем запись времени доступа (еще быстрее)
+         "discard=async"    # Фоновая очистка удаленных данных (TRIM)
+       ];
     };
 
-
-  fileSystems."/home/andrey/Изображения" =
-    { device = system_disk;
+  fileSystems."/home/andrey/iso" =
+    { device = data_disk;
       fsType = "btrfs";
-      options = [ "subvol=Pictures" ];
+      options = [ 
+        "subvol=iso" 
+        "compress-force=zstd:3"  # Включаем быстрое сжатие
+        "noatime"          # Отключаем запись времени доступа (еще быстрее)
+         "discard=async"    # Фоновая очистка удаленных данных (TRIM)
+       ];
+    };
+  
+  fileSystems."/home/andrey/Calibre" =
+    { device = data_disk;
+      fsType = "btrfs";
+      options = [ 
+        "subvol=Calibre" 
+        "compress-force=zstd:3"  # Включаем быстрое сжатие
+        "noatime"          # Отключаем запись времени доступа (еще быстрее)
+         "discard=async"    # Фоновая очистка удаленных данных (TRIM)
+       ];
     };
 
-  fileSystems."/home/andrey/Видео" =
-    { device = system_disk;
-      fsType = "btrfs";
-      options = [ "subvol=Videos" ];
+  fileSystems."/boot" =
+    { device = "/dev/disk/by-uuid/EEED-F74D";
+      fsType = "vfat";
+      options = [ "fmask=0077" "dmask=0077" ];
     };
 
-    zramSwap.enable=true;
+  swapDevices = [ ];
+
 
 #+end_src
-** services
-*** sound
-#+begin_src nix :noweb-ref services-delux
-  services.pipewire.enable=true;
-  services.pipewire.wireplumber.enable=true;
-  services.pipewire.pulse.enable=true;
+** services 
+*** bluetooth
+#+header: :noweb-ref services-vingo
+#+begin_src nix
+services.blueman.enable = true;
+#+end_src
+*** +sound
+#+begin_src nix :noweb-ref services-vingo
+  services.pulseaudio.enable = false;
+  security.rtkit.enable = true;
+  services.pipewire = {
+    enable = true;
+    alsa.enable = true;
+    alsa.support32Bit = true;
+    pulse.enable = true;
+    # If you want to use JACK applications, uncomment this
+    #jack.enable = true;
+    # use the example session manager (no others are packaged yet so this is enabled by default,
+    # no need to redefine it in your config for now)
+    #media-session.enable = true;
+  };
   
-  services.speechd.enable = true; 
+###  services.speechd.enable = true; 
 #  environment.etc."speech-dispatcher/speechd.conf".text=''
 #    DefaultModule "rhvoice"
 #    AddModule "rhvoice" "sd_rhvoice" "rhvoice.conf"
 #  '';
 
 #+end_src
-*** ssh
-#+begin_src nix :noweb-ref services-delux
+*** +ssh
+#+begin_src nix :noweb-ref services-vingo
 services.sshd.enable = true;
 #+end_src
-*** samba
-#+begin_src nix :noweb-ref services-delux
+*** +samba
+#+begin_src nix :noweb-ref services-vingo
   services.samba.enable=true;
   services.samba.openFirewall=true;
-#  services.samba.securityType="user";
   services.samba.settings ={ public =
       { path = "/home/andrey";
 #      "read only" = "yes";
        browseable = "yes";
 #      global.security="user";
       comment = "Public samba share.";
-#      "guest ok" = "yes";
+      "guest ok" = "yes";
       };
      global.security="user";
     };
 
 #+end_src
-*** Сеть
-#+begin_src :noweb-ref services-delux
+*** +net
+#+begin_src :noweb-ref services-vingo
+  # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
+
+  # Configure network proxy if necessary
+  # networking.proxy.default = "http://user:password@proxy:port/";
+  # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
+
+  # Enable networking
   networking.networkmanager.enable = true;
   networking.firewall.enable = false;
-  services.tor.enable = true;
-  services.tor.client.dns.enable = true;
+###  services.tor.enable = true;
+###  services.tor.client.dns.enable = true;
 #+end_src
-*** x11
-#+begin_src nix :noweb-ref services-delux
+*** +x11
+#+begin_src nix :noweb-ref services-vingo
   services.xserver.enable = true;
-  services.xserver.xkb.layout = "us,ua";
-  services.xserver.xkb.variant = "rus";
-  services.xserver.xkb.options = "grp:rctrl_rshift_toggle,nbsp:level3,lv3:ralt_switch, ctrl:nocaps";
+    services.xserver.videoDrivers = ["nvidia"];
+
+  # Enable the XFCE Desktop Environment.
   services.xserver.displayManager.lightdm.enable = true;
-  services.displayManager.autoLogin.enable = true;
+  services.xserver.desktopManager.xfce.enable = true;
+
   services.displayManager.autoLogin.user = "andrey";
   services.displayManager.defaultSession = "xfce";
- 
-  services.xserver.desktopManager.xfce.enable = true;
-  services.xserver.desktopManager.xfce.noDesktop = false;
 
-  xdg.portal.extraPortals= [
-                             pkgs.xdg-desktop-portal-gnome
-			      ];
-  xdg.portal.enable=true;
+  services.xserver.xkb = {
+         layout = "us,ua";
+         variant = "rus";
+         options = "grp:rctrl_rshift_toggle,nbsp:level3,lv3:ralt_switch, ctrl:nocaps";
+  };
+
+###  xdg.portal.extraPortals= [
+###      pkgs.xdg-desktop-portal-gnome
+###  ];
+###  xdg.portal.enable=true;
 
     services.picom = {
     enable = true;
     backend = "glx";
     shadow = true;
+    vSync=true;
     shadowExclude = [
       "_GTK_FRAME_EXTENTS@:c"
       "class_g = '.ulauncher-wrapped'"
@@ -223,24 +338,24 @@ services.sshd.enable = true;
   };
 
 #+end_src
-*** emacs
-#+begin_src nix :noweb-ref services-delux
+*** +emacs
+#+begin_src nix :noweb-ref services-vingo
 services.emacs.enable=true;
 services.emacs.startWithGraphical=true;
 services.emacs.defaultEditor=true;
 #+end_src
-*** virtualizsation
-#+begin_src nix :noweb-ref services-delux
+*** +virtualizsation
+#+begin_src nix :noweb-ref services-vingo
 virtualisation.docker = {
     enable = true;
     enableOnBoot = true;
   };
 #  virtualisation.libvirtd.enable = true;
-services.flatpak.enable = true; 
+# services.flatpak.enable = true; 
 #+end_src
 *** озвучивание времени каждые полчаса
-#+header: :noweb-ref services-delux 
-#+begin_src nix
+,#+header: :noweb-ref services-vingo 
+,#+begin_src nix
 systemd.services.speak-time = {
     description = "Speak Time Service";
     path = [ pkgs.bash ];
@@ -265,106 +380,25 @@ systemd.services.speak-time = {
 
   systemd.services.speak-time.wantedBy = [ "multi-user.target" ];
 #+end_src
-*** locate
-#+header: :noweb-ref services-delux
+*** +locate
+#+header: :noweb-ref services-vingo
 #+begin_src nix
 services.locate={
     enable=true;
     prunePaths=[
-    "/home/andrey/Calibre"
+#    "/home/andrey/Calibre"
     "/home/andrey/Музыка"
     "/home/andrey/.cache"
-    "/home/andrey/.kodi"
-    "/home/andrey/.mozilla"
-    "/home/andrey/.librewolf"
-    "/home/andrey/.local/Chromium"
+#    "/home/andrey/.kodi"
+#    "/home/andrey/.mozilla"
+#   "/home/andrey/.librewolf"
+#    "/home/andrey/.local/Chromium"
   ];
 };  
 #+end_src   
-** enviroments
-variables
-#+begin_src nix :noweb-ref enviroments-delux
-  environment.variables =  {
-#      EDITOR = "emacs -nw";
-       VISUAL = "emacsclient -c";
-       TERM = "xterm-256color";
-      TERMCMD = "kitty";
-      PATH="$HOME/.local/texlive/2024/bin:$PATH";
-    };
-
-#+end_src
-shells
-#+begin_src nix :noweb-ref enviroments-delux
-     environment.shells = [ pkgs.bashInteractive ];
-    
-     environment.homeBinInPath = true;
-     environment.localBinInPath = true;
-#+end_src
-aliases
-#+begin_src nix :noweb-ref enviroments-delux
-
-     environment.shellAliases =  {
-      
-
-      h = "history ";
-      p = "ps -ax ";
-      q = "exit";
-      sdwn = "shutdown -h 0";
-      lsp = "netstat -tupln";
-      i = "ipython ";
-      r = "ranger";
-      p6 = "raku";
-      c = "clifmrun"; 
-      ffp = "ffmpeg -i $(xclip -o -sel cli) ";
-      yt = "yt-dlp ";
-      ytp="yt-dlp $(xclip -o -sel cli) ";
-      wgp = "wget -Erkp -np -w 1 $(xclip -o -sel cli) "; 
-      
-      
-#      ocrre = "ocrmypdf --output-type=pdfa-2  --pdfa-image-compression=jpeg -O 2  -d -c -l rus+eng --unpaper-args '--layout double' ";
-#      ocrr = "ocrmypdf --output-type=pdfa-2  --pdfa-image-compression=jpeg -O 2  -d -c -l rus --unpaper-args '--layout double' ";
-#      ocre = "ocrmypdf --output-type=pdfa-2  --pdfa-image-compression=jpeg -O 2  -d -c -l eng --unpaper-args '--layout double' ";
-#      ocru = "ocrmypdf --output-type=pdfa-2  --pdfa-image-compression=jpeg -O 2  -d -c -l ukr --unpaper-args '--layout double' ";
-#      ocrue = "ocrmypdf --output-type=pdfa-2  --pdfa-image-compression=jpeg -O 2  -d -c -l ukr+eng --unpaper-args '--layout double' ";
-      p6doc = "docker run --rm -d -p 3000:3000 jjmerelo/perl6-doc ";
-
-      nh = "nix-hash --type sha256 --base32 ";
-      ns = "nix-shell ";
-      nr = "sudo nixos-rebuild switch";
-      nru = "sudo nixos-rebuild switch --upgrade-all";
-      ne = "nix-env ";
-      nei = "nix-env -iA";
-      neq = "nix-env -q ";
-      nee = "nix-env -e ";
-      ncg = "sudo nix-collect-garbage ";
-
-      gta = "git add ";
-      gtc = "git commit ";
-      gts = "git status ";
-      gtgh = "git push ";
-      ghgt = "git pull ";
-      gtr = "git rm ";
-      gtu = "git restore ";
-      gpp = "git clone $(xclip -o -sel cli) ";
-      
-      dcu = "docker-compose up  --build -d ";
-      dcd = "docker-compose down ";
-      dcr = "docker-compose restart ";
-      
-      dps  = "docker ps -a ";
-      dil = "docker image list ";
-      dip = "docker image prune ";
-      dir = "docker rmi ";
-
-      ag = "alias|grep ";
-      pg = "ps -ax|grep ";
-      hg = "history|grep ";
-      eg = "env|grep ";
-    };
-#+end_src
 ** packages
 *** Сеть
-#+begin_src nix :noweb-ref packages-delux
+#+begin_src nix :noweb-ref packages-vingo
     #Утилиты
     inetutils # базовые  - ping (проверка доступности узла),
               # ftp (клиент для передачи файлов),
@@ -387,51 +421,46 @@ aliases
    #тестовый интернет браузер
     w3m 
    # браузеры на базе firefox
-#    firefox
+   # firefox
     librewolf
   # расширения браузера firefox  
     tridactyl-native
   # браузеры на базе chromium
-#    chromium 
+  #  chromium 
     qutebrowser
-    nyxt 
-# прочее
-   tdesktop # Telegram-Desktop
-   crow-translate # онлайн перевод выделенного текста
-   tg # cli telegram клиент  
+    telegram-desktop # Telegram-Desktop
+#   crow-translate # онлайн перевод выделенного текста no guix  
 #+end_src
 *** коммандная строка
-#+begin_src nix :noweb-ref packages-delux
+#+begin_src nix :noweb-ref packages-vingo
     kitty # терминал
-    old.satty # аннотация скриншотов 
+    satty # аннотация скриншотов 
     bat highlight    # cli подсветка синтаксиса текстовых файлов
 #+end_src
-*** шрифты
-#+begin_src nix :noweb-ref packages-delux
+*** шрифты (разобраться)
+#+begin_src nix :noweb-ref packages-vingo
     font-manager # менеджер шрифтов no guix
     fontpreview # nnn depend optinal viewer  no guix
     google-fonts
     noto-fonts
-#    libration_ttf
-    ubuntu_font_family
+    ubuntu-classic
     ucs-fonts
     cm_unicode
     open-fonts
     terminus_font # шрифт
     terminus_font_ttf # шрифт
     nerd-fonts.hack
-#    nerdfonts # шрифты
 #+end_src
 *** X11
-#+begin_src nix :noweb-ref packages-delux
-    copyq # продвинутый менеджер буфера обмена
+#+begin_src nix :noweb-ref packages-vingo
+   copyq # продвинутый менеджер буфера обмена
 #    xsane # работа со сканером
-    dconf
-    gnome-control-center
-    glib-networking
-    dconf-editor
-    zenity # gui диалоги
-    ncurses # создание tui 
+   dconf
+   gnome-control-center
+   glib-networking
+   dconf-editor
+   zenity # gui диалоги
+   ncurses # создание tui 
    kbdd # сохраняет в каждом окне свою раскладку
    xclip # работа з буфером обмена
    xdg-utils # работа с mime файлами
@@ -445,7 +474,6 @@ aliases
    xdotool # работа с окнами X11
    xorg.xev # просмотр событий окна
    wmctrl
-  
    xfce.xfce4-panel 
    xfce.xfce4-timer-plugin
    xfce.xfce4-genmon-plugin
@@ -457,7 +485,6 @@ aliases
    xfce.xfce4-whiskermenu-plugin
    xfce.xfce4-sensors-plugin
    xfce.xfce4-pulseaudio-plugin
-   xfce.xfce4-datetime-plugin
    xfce.xfce4-volumed-pulse
    xfce.thunar-volman
    xfce.thunar-archive-plugin
@@ -465,13 +492,9 @@ aliases
    ueberzugpp
 #+end_src
 *** файлы
-#+begin_src nix :noweb-ref packages-delux
-#    pcmanfm
-#    ranger
+#+begin_src nix :noweb-ref packages-vingo
     file # информация о типе файла
     mediainfo # информация о медиафайлах
-    clifm
-#    yazi
     zoxide #?
     ripgrep
     fd # продвинутая find
@@ -479,16 +502,20 @@ aliases
     rofi # меню для запуска программ
     mlocate  
 #+end_src
-*** mix
-#+begin_src nix :noweb-ref packages-delux
+*** system,mix
+#+begin_src nix :noweb-ref packages-vingo
     autojump # быстрый переход в командной оболочке
     bleachbit # чистка от мусора no guix
     btrfs-progs # работа с файловой системой btrfs
+    bluez       # Основной стек протоколов (включает bluetoothctl)
+    bluez-tools
     conky #  отображение информационных панелей
     coreutils 
     dmenu # мени для х11
     fzf #cmd fuzzy finder
     glib
+    gnupg
+    pinentry-curses
     gparted # редактирование разделов диска
     htop # просмотр процессов
     keepassxc # менеджер паролей 
@@ -496,7 +523,6 @@ aliases
     libnotify # сообщения нотификации
     lsof # просмотр открытих файлов
     lshw
-#    navi #шпаргалка !!!
     perl540Packages.FileMimeInfo #mimeopen mimeinfo
     pmount # монтирование дисков
     tree # просмотр дерева каталогов
@@ -506,7 +532,7 @@ aliases
     nix-search-cli
 #+end_src
 *** разработка
-#+begin_src nix :noweb-ref packages-delux
+#+begin_src nix :noweb-ref packages-vingo
     cmake  # для разрабочиков ПО
     gcc_multi # для разрабочиков ПО
     gitFull # git
@@ -514,36 +540,25 @@ aliases
     gnumake # для разрабочиков ПО
     nodejs
     postgresql # сервер базы данных
-    (python312.withPackages (subpkgs: with subpkgs; [
-      jupyter-all
-      ranger
-      beautifulsoup4
-      nltk
-      transformers
-      spacy
-#      gensim
-      stanza
-      fasttext
-      langdetect
-      langid
-      ipython
-      html2text
-      ocrmypdf 
-      pandoc-xnos
-      pdf2docx
-      weasyprint
-  
-    ]))
-#    polyglot
+    jupyter-all
+    python313Packages.beautifulsoup4
+    python313Packages.nltk
+    python313Packages.transformers
+    python313Packages.spacy
+    python313Packages.stanza
+    python313Packages.ipython
+    html2text
+    ocrmypdf 
+    python313Packages.pandoc-xnos
+    python313Packages.pdf2docx
+    python313Packages.weasyprint
     pipx 
     sqlite # работа з базой данных
     sqlitebrowser # просмотр базы данных
     jq
-    sbcl
-    asdf  
 #+end_src
 *** архивы
-#+begin_src nix :noweb-ref packages-delux
+#+begin_src nix :noweb-ref packages-vingo
     archivemount # монтирование cpio, .tar.gz, .tar.bz2
     atool # монтирование архивов 
     avfs # монтирование архивов
@@ -553,8 +568,8 @@ aliases
     p7zip # архиватор
 #+end_src
 *** медиа
-#+begin_src nix :noweb-ref packages-delux
-    deadbeef # медиаплеер и конвертор музыки
+#+begin_src nix :noweb-ref packages-vingo
+#    deadbeef # медиаплеер и конвертор музыки
     easytag # редактор музыкальных тегов
     ffmpeg # редактор командной строки видео и аудио
     ffmpegthumbnailer # скины видео
@@ -567,13 +582,11 @@ aliases
     lame # конвертирование медиа кодек
     mpv # видеоплеер
     sxiv # просмотр изображений
-#    strawberry # аудиоплеер с созданием базы музыки 
-#    kodi # медиокомплекс
     rhvoice #звуковые движки
     beets
 #+end_src
 *** офис текст
-#+begin_src nix :noweb-ref packages-delux
+#+begin_src nix :noweb-ref packages-vingo
     aspell # прогамма проверки правописания
     aspellDicts.en aspellDicts.ru aspellDicts.uk  # словари aspell
     hunspellDicts.en-us  hunspellDicts.ru-ru   hunspellDicts.uk-ua # словари hunspell
@@ -584,42 +597,32 @@ aliases
     djvulibre # работа з djvu
     epub2txt2
     epub-thumbnailer  
- #   ghostwriter #
- #   glow #Render markdown on the CLI, nnn view no guix
     htmlq
     jp # for cli view json no guix
     libreoffice # бесплатный офис
-    libretranslate
-#    marktext 
-    miller # обработка файлов csv, json ...no guix
+#    miller # обработка файлов csv, json ...no guix
     mupdf # обработка pdf
     odt2txt # преобразование документов libreoffice в текст
-    old.okular # просмотр документов
     pandoc
     pistol # для просмотра файлов no guix
     poppler # обработка pdf
-    poppler_utils
+    poppler-utils
     pdftk
     pdf2odt
     pdfchain
     qpdf
-    python312Packages.html2text
-    python312Packages.ocrmypdf #no guix
-    python312Packages.pandoc-xnos
-    python312Packages.pdf2docx
-    python312Packages.weasyprint
-    sigil # редактор книг epub no guix
-    (texliveFull.withPackages (ps: with ps; [babel-russian babel-ukrainian babel-english
-             xunicode cyrillic  polyglossia latex-fonts]))
-    vim_configurable # текстовый редактор
+    python313Packages.html2text
+    python313Packages.ocrmypdf 
+    python313Packages.pandoc-xnos
+    python313Packages.pdf2docx
+    python313Packages.weasyprint
     whisper-ctranslate2
     zathura # просмотр pdf
-    recoll
 #+end_src
 *** мои пакеты и сервисы
 **** cortile
 пакет
-#+header: :tangle ~/Linux/nixosconfig/delux-nix/pkgs/cortile/default.nix :noweb yes :mkdirp yes
+#+header: :tangle ~/Linux/nixosconfig/vingo-nix/pkgs/cortile/default.nix :noweb yes :mkdirp yes
 #+begin_src nix
 { lib, stdenv, buildGoModule, fetchFromGitHub }:
 
@@ -664,7 +667,7 @@ buildGoModule rec {
 }
 #+end_src
 сервис
-#+header: :noweb-ref services-delux
+#+header: :noweb-ref services-vingo
 #+begin_src nix 
 
   systemd.user.services.cortile = 
@@ -697,37 +700,113 @@ in
  
 #+end_src
 *** все пакеты
-#+name: all-packages-delux
+#+name: all-packages-vingo
 #+begin_src nix 
 nixpkgs.config.allowUnfree = true;
+  
 environment.systemPackages = with pkgs; [
-<<packages-delux>> 
+<<packages-vingo>> 
   ];
 #+end_src
+** enviroments
+variables
+#+begin_src nix :noweb-ref enviroments-vingo
+  environment.variables =  {
+      EDITOR = "emacs -nw";
+      VISUAL = "emacsclient -c";
+      TERM = "xterm-256color";
+      TERMCMD = "kitty";
+#      PATH="$HOME/.local:$PATH";
+    };
+
+#+end_src
+shells
+#+begin_src nix :noweb-ref enviroments-vingo
+     environment.shells = [ pkgs.bashInteractive ];
+    
+#    environment.homeBinInPath = true;
+     environment.localBinInPath = true;
+#+end_src
+aliases
+#+begin_src nix :noweb-ref enviroments-vingo
+
+     environment.shellAliases =  {
+      
+
+      h = "history ";
+      p = "ps -ax ";
+      q = "exit";
+      sdwn = "shutdown -h 0";
+      lsp = "netstat -tupln";
+      i = "ipython ";
+      r = "ranger";
+      p6 = "raku";
+      c = "clifmrun"; 
+      ffp = "ffmpeg -i $(xclip -o -sel cli) ";
+      yt = "yt-dlp ";
+      ytp="yt-dlp $(xclip -o -sel cli) ";
+      wgp = "wget -Erkp -np -w 1 $(xclip -o -sel cli) "; 
+      
+      
+      nh = "nix-hash --type sha256 --base32 ";
+      ns = "nix-shell ";
+      nr = "sudo nixos-rebuild switch";
+      nru = "sudo nixos-rebuild switch --upgrade-all";
+      ne = "nix-env ";
+      nei = "nix-env -iA";
+      neq = "nix-env -q ";
+      nee = "nix-env -e ";
+      ncg = "sudo nix-collect-garbage ";
+
+      gta = "git add ";
+      gtc = "git commit ";
+      gts = "git status ";
+      gtgh = "git push ";
+      ghgt = "git pull ";
+      gtr = "git rm ";
+      gtu = "git restore ";
+      gpp = "git clone $(xclip -o -sel cli) ";
+      
+      dcu = "docker-compose up  --build -d ";
+      dcd = "docker-compose down ";
+      dcr = "docker-compose restart ";
+      
+      dps  = "docker ps -a ";
+      dil = "docker image list ";
+      dip = "docker image prune ";
+      dir = "docker rmi ";
+
+      ag = "alias|grep ";
+      pg = "ps -ax|grep ";
+      hg = "history|grep ";
+      eg = "env|grep ";
+    };
+    #+end_src
 * конфигуация программ системы
-#+header: :tangle ~/Linux/nixosconfig/delux-nix/programm-configs.nix :noweb yes :mkdirp yes
+** все конфигурации
+#+header: :tangle ~/Linux/nixosconfig/vingo-nix/programm-configs.nix :noweb yes :mkdirp yes
 #+begin_src nix
-{ config, pkgs, ... }:
-{ 
-  imports =
-    [ 
-        ./as-clifm.nix
-    ];
+#{ config, pkgs, ... }:
+#{ 
+#  imports =
+#    [ 
+#        ./as-clifm.nix
+#    ];
 
 <<programs>>
 }
 #+end_src
-
-mtr gnupg
+** mtr gnupg
 #+BEGIN_SRC nix :noweb-ref programs 
   programs.mtr.enable = true;
   programs.gnupg.agent = {
     enable = true;
     enableSSHSupport = true;
+    pinentryPackage = pkgs.pinentry-curses; 
    };
 #+end_src
-chromium
-#+BEGIN_SRC nix :noweb-ref programs 
+** chromium
+,#+BEGIN_SRC nix :noweb-ref programs 
 programs.chromium.enable = true;
 programs.chromium.extraOpts = {
   "SyncDisabled" = true;
@@ -740,8 +819,8 @@ programs.chromium.extraOpts = {
   ];
 };
 #+END_SRC
-clifm
-#+BEGIN_SRC nix :tangle ~/Linux/nixosconfig/delux-nix/as-clifm.nix :noweb yes :mkdirp yes
+** clifm
+,#+BEGIN_SRC nix :tangle ~/Linux/nixosconfig/vingo-nix/as-clifm.nix :noweb yes :mkdirp yes
 {pkgs, lib, ...}:
 let as-clifm=pkgs.clifm.overrideAttrs (oldAttrs: {
        postBuild = (oldAttrs.postBuild or "") + ''
@@ -755,43 +834,45 @@ environment.systemPackages = [ as-clifm ];
 }  
 #+END_SRC
 
-appimage
-#+BEGIN_SRC nix :noweb-ref programs 
+** appimage
+,#+BEGIN_SRC nix :noweb-ref programs 
 programs.appimage.enable = true;
 #+END_SRC
 
-
-* delux - компʼютер с внутреннего диска
-#+header: :tangle ~/Linux/nixosconfig/delux-nix/configuration.nix :mkdirp yes :noweb yes
+* vingo - компʼютер с внутреннего диска
+#+header: :tangle ~/Linux/nixosconfig/vingo-nix/configuration.nix :mkdirp yes :noweb yes
 #+begin_src nix
 { config, pkgs, lib, ... }:
-let as_host="delux";
-system_disk= "/dev/disk/by-uuid/bb4cca63-bde0-4af7-855e-af49a68efef8";  
+let as_host="vingo";
+system_disk= "/dev/disk/by-uuid/412a5eab-b8be-405d-a6b3-adeddbbf8500";  
+data_disk= "/dev/disk/by-uuid/0087db31-e714-4942-8eea-3686c68be358";  
+backup_disk= "/dev/disk/by-uuid/b6affbcd-6022-4593-a686-3070bdc8bc64";  
 unstable = import <unstable> {};
 old = import <old> {};  
 in { 
 
   imports =
     [ 
-        ./programm-configs.nix
+          ./hardware-configuration.nix
+#         ./programm-configs.nix
     ];
 
 <<users>>
 <<mandoc>>
 <<nixos>>
-<<boot-delux>>
-<<filesystem-delux>>
-<<services-delux>>
-<<enviroments-delux>>
-<<all-packages-delux>>
+<<boot-vingo>>
+<<filesystem-vingo>>
+<<services-vingo>>
+<<enviroments-vingo>>
+<<all-packages-vingo>>
 }
 #+end_src
 
-* delux-usb - компʼютер с usb  диска 
-#+header: :tangle ~/Linux/nixosconfig-test/delux-nix-usb/configuration.nix :mkdirp yes
+* vingo-usb - компʼютер с usb  диска 
+,#+header: :tangle ~/Linux/nixosconfig-test/vingo-nix-usb/configuration.nix :mkdirp yes
 #+begin_src nix
 { config, pkgs, ... }:
-let as_host="delux usb";
+let as_host="vingo usb";
 system_disk="/dev/disk/by-uuid/b6affbcd-6022-4593-a686-3070bdc8bc64";
 unstable = import <unstable> {};
 old = import <old> {};
@@ -806,15 +887,15 @@ in {
 <<users>>
 <<mandoc>>
 <<nixos>>
-<<boot-delux>>
-<<filesystem-delux>>
-<<services-delux>>
-<<enviroments-delux>>
-<<all-packages-delux>>
+<<boot-vingo>>
+<<filesystem-vingo>>
+<<services-vingo>>
+<<enviroments-vingo>>
+<<all-packages-vingo>>
 }
 #+end_src
 * samsung r60 ноутбук
-#+header: :tangle ~/Linux/nixosconfig-test/samsungr60/configuration.nix :mkdirp yes
+,#+header: :tangle ~/Linux/nixosconfig-test/samsungr60/configuration.nix :mkdirp yes
 #+begin_src nix
 { config, pkgs, ... }:
 let as_host="samsumg";
@@ -829,7 +910,7 @@ in {
 ,#+header: :tangle ~/Linux/nixosconfig-test/android/configuration.nix :mkdirp yes
 #+begin_src nix
 { config, pkgs, ... }:
-let as_host="delux";
+let as_host="vingo";
 unstable = import <unstable> {};
 in { 
 <<users>>
