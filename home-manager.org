@@ -84,7 +84,7 @@
 * программы
 ** qutebrowser
 *** config
-;#+header: :tangle ~/.config/qutebrowser/config.py :mkdirp yes :noweb yes
+#+header: :tangle ~/.config/qutebrowser/config.py :mkdirp yes :noweb yes
 #+begin_src python :noweb yes 
   import os
   import shutil
@@ -765,7 +765,8 @@ https://you.com/search?q=who+are+you&tbm=youchat&cfr=chat who are you
 #+end_src
 ** cortile
 *** Файл конфигурации 
-#+begin_src toml :tangle ~/.config/home-manager/dotfiles/cortile.toml :mkdirp yes
+#+header: :tangle  .~/config/cortile/config.toml :mkdirp yes
+#+begin_src toml
        ################################################################################
        #                                                                              #
        #           https://github.com/leukipp/cortile/blob/main/config.toml           #
@@ -824,7 +825,7 @@ https://you.com/search?q=who+are+you&tbm=youchat&cfr=chat who are you
       window_masters_max = 1
 
       # Maximum number of allowed slave windows (1 - 5).
-      window_slaves_max = 1
+      window_slaves_max = 2
 
       # How much space should be left between windows (0 - 100).
       window_gap_size = 5
@@ -1021,7 +1022,7 @@ https://you.com/search?q=who+are+you&tbm=youchat&cfr=chat who are you
       scroll_right = ""
 #+end_src
 *** Копирование конфига в домашний каталог
-#+header: :noweb-ref delux-home-files
+,#+header: :noweb-ref delux-home-files
 #+begin_src nix :noweb yes 
 ".config/cortile/config.toml".source=dotfiles/cortile.toml;
 #+end_src
@@ -1044,7 +1045,8 @@ shell= "bash --login";
 };
 #+end_src
 ** clifm
-#+begin_src txt :tangle ~/.config/clifm/profiles/default/preview.clifm  :mkdirp yes
+,#+header: :tangle ~/.config/clifm/profiles/default/preview.clifm  :mkdirp yes
+#+begin_src txt
                   ############################################
                   #  Конфигурационный файл для Shotgun       #
                   # Предварительный просмотрщик файлов Clifm #
@@ -1159,7 +1161,7 @@ application/x-bittorrent=transmission-show --;aria2c -S --
 #.*=file -b --;true;
 
 #+end_src
-#+header: :tangle  ~/.config/clifm/profiles/default/clifmrc  :mkdirp yes  
+,#+header: :tangle  ~/.config/clifm/profiles/default/clifmrc  :mkdirp yes  
 #+begin_src txt 
 		###########################################
 		#                  CLIFM                  #
@@ -1719,7 +1721,7 @@ alias pan='pandoc --wrap=none  --extract-media='
 ** ranger
 конфиг
 *** rc.conf основной конфиг
-;#+header: :tangle ~/.config/ranger/rc.conf  :mkdirp yes
+,#+header: :tangle ~/.config/ranger/rc.conf  :mkdirp yes
 #+begin_src text :noweb yes
 <<ranger-conf>>
 #+end_src
@@ -2577,7 +2579,8 @@ tmap <ESC> taskview_close
 copytmap <ESC> q Q w <C-c>
 #+end_src
 *** rifle.conf запуск програм
-#+begin_src text :tangle  ~/.config/ranger/rifle.conf :mkdirp yes
+#+header: :tangle  ~/.config/ranger/rifle.conf :mkdirp yes  
+#+begin_src text 
 # vim: ft=cfg
 #
 # Это файл конфигурации riffle, исполнителя/открывателя файлов рейнджера.
@@ -2873,7 +2876,8 @@ label trash = mkdir -p -- ${XDG_DATA_DIR:-$HOME/.ranger}/ranger-trash; mv -- "$@
 
 #+end_src
 *** scope.sh просмотршик
-#+begin_src bash  :tangle  ~/.config/ranger/scope.sh :mkdirp yes :tangle-mode "a+x"
+#+header:  :tangle  ~/.config/ranger/scope.sh :mkdirp yes :tangle-mode "a+x"
+#+begin_src bash
    #!/usr/bin/env bash
 
    set -o noclobber -o noglob -o nounset -o pipefail
@@ -4004,7 +4008,7 @@ alias reibadailty jumble
 
 #+end_src
 ** emacs
-#+INCLUDE emacs.org
+#+include emacs.org
 ** ВЫПОЛНИТЬ scripts сделать отдельный модуль emacs calibre
 Бакап всех данных и настроек на винчестер usb 
 #+header: :tangle ~/bin/mybackup :mkdirp yes :tangle-mode "a+x"
