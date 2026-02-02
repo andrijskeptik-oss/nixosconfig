@@ -4,7 +4,6 @@
 #+startup: hidedrawers
 #+property: header-args :noweb yes
 :END:
-настройки для всех пользователей
 * модули vinga
 ** общие настройки
 #+header: :noweb-ref users
@@ -637,17 +636,6 @@ fonts.packages = with pkgs; [
     nodejs
     postgresql # сервер базы данных
     jupyter-all
-    python312Packages.beautifulsoup4
-    python312Packages.nltk
-    python312Packages.transformers
-    python312Packages.spacy
-    python312Packages.stanza
-    python312Packages.ipython
-    html2text
-    ocrmypdf 
-    python312Packages.pandoc-xnos
-    python312Packages.pdf2docx
-    python312Packages.weasyprint
     pipx 
     sqlite # работа з базой данных
     sqlitebrowser # просмотр базы данных
@@ -707,12 +695,13 @@ fonts.packages = with pkgs; [
     pdf2odt
     pdfchain
     qpdf
-    python312Packages.html2text
-    python312Packages.ocrmypdf 
-    python312Packages.pandoc-xnos
-    python312Packages.pdf2docx
-    python312Packages.weasyprint
-    whisper-ctranslate2
+    html2text
+    ocrmypdf 
+    python311Packages.html2text
+    python311Packages.beautifulsoup4
+    python311Packages.pandoc-xnos
+    python311Packages.pdf2docx
+    python311Packages.weasyprint
     zathura # просмотр pdf
     crow-translate 
 #+end_src
@@ -891,6 +880,89 @@ aliases
       eg = "env|grep ";
     };
     #+end_src
+* AI
+** сервисы 
+#+header: :noweb-ref services-vinga
+#+begin_src nix
+
+  services.ollama = {
+    enable = true;
+    acceleration = "cuda"; # Автоматически подключает нужные библиотеки
+  };
+  virtualisation.docker.enableNvidia = true;
+
+  services.open-webui = {
+    enable = true;
+    port = 8080;
+    
+    environment = {
+      # Вимикаємо авторизацію (режим одного користувача)
+      WEBUI_AUTH = "False";
+      
+      # ПОВНИЙ OFFLINE РЕЖИМ
+      OFFLINE_MODE = "True";
+      
+      # Додаткові налаштування приватності
+      ANONYMIZED_TELEMETRY = "False";
+      DO_NOT_TRACK = "True";
+      HF_HUB_OFFLINE = "1"; # Наказує бібліотекам Hugging Face не лізти в інет
+      
+      # Зв'язок з Ollama
+      OLLAMA_API_BASE_URL = "http://127.0.0.1:11434";
+    };
+  };
+
+#+end_src
+
+#+RESULTS:
+
+** пакеты
+#+header: :noweb-ref packages-vinga
+#+begin_src nix
+    nvtopPackages.nvidia
+    nvidia-container-toolkit
+    nvtop
+    ollama
+    cudaPackages.cudatoolkit
+    linuxPackages.nvidia_x11
+    nvtopPackages.nvidia
+    python311Packages.openai-whisper
+    python311Packages.faster-whisper
+    python311Packages.torch-bin  
+    python311Packages.nltk
+    python311Packages.transformers
+    python311Packages.spacy
+    python311Packages.ipython
+    python311Packages.stanza
+#+end_src
+** нужно задать кеш для скачивания пакетов
+посмотреть, можна ли задать в пакетах системы
+#+begin_src bash
+  nix-env -iA nixpkgs.cachix
+  cachix use cuda-maintainers
+#+end_src
+** среда разработки Python
+#+header: :tangle ~/AI_work/shell.nix :noweb yes :mkdirp yes
+#+begin_src nix
+{ pkgs ? import <nixpkgs> { config.allowUnfree = true; } }:
+
+pkgs.mkShell {
+  buildInputs = with pkgs; [
+    python3
+    python311Packages.pytorch-bin # Версия с поддержкой CUDA
+    python311Packages.transformers
+    cudaPackages.cudatoolkit
+    linuxPackages.nvidia_x11
+    nvtopPackages.nvidia
+    python311Packages.openai-whisper
+  ];
+
+  shellHook = ''
+    export LD_LIBRARY_PATH=${pkgs.linuxPackages.nvidia_x11}/lib:${pkgs.cudaPackages.cudatoolkit}/lib
+    echo "NVIDIA AI Development Environment Ready"
+  '';
+}
+#+end_src
 * конфигуация программ системы
 ** все конфигурации
 #+header: :tangle ~/Linux/nixosconfig/programm-configs.nix :noweb yes :mkdirp yes
@@ -949,43 +1021,64 @@ programs.appimage.enable = true;
 #+END_SRC
 
 ** hyprland
+*** пакет
 #+begin_src nix :noweb-ref programs
   programs.hyprland = {
     enable = true;
     package = hyprland.packages.${pkgs.system}.hyprland;
   };
 #+end_src
+*** конфиг
 #+header: :tangle ~/.config/hypr/hyprland.conf :mkdirp yes :noweb yes
 #+begin_src bash 
 # Настройка Master-режима (одно большое слева, остальные стеком справа)
-general {
-    layout = master
-    gaps_in = 5
-    gaps_out = 10
-    border_size = 2
-}
+  general {
+      layout = master
+      gaps_in = 5
+      gaps_out = 10
+      border_size = 2
+  }
 
-master {
-    new_status = master
-    mfact = 0.55 # Основное окно чуть больше половины
-}
+  master {
+      new_status = master
+      mfact = 0.55 # Основное окно чуть больше половины
+  }
 
-# Автозапуск панели и трея
-exec-once = nwg-panel -c c1 -s s1
+  # Автозапуск панели и трея
+  exec-once = nwg-panel 
 
-# ГОРЯЧИЕ КЛАВИШИ
-$mainMod = SUPER
+  # ГОРЯЧИЕ КЛАВИШИ
+  $mainMod = SUPER
 
-bind = $mainMod, Q, exec, kitty
-bind = $mainMod, E, exec, pcmanfm
-bind = $mainMod, L, exec, hyprlock
-bind = $mainMod, C, killactive, 
-bind = $mainMod, G, togglegroup, # Склеить окна в стек (вкладки)
+  bind = $mainMod, T, exec, kitty
+  bind = $mainMod, E, exec, pcmanfm
+  bind = $mainMod, L, exec, hyprlock
+  bind = $mainMod, C, killactive, 
+  bind = $mainMod, G, togglegroup, 
+  { config, pkgs, ... }:
+  let as_host="vinga usb";
+  system_disk="/dev/disk/by-uuid/b6affbcd-6022-4593-a686-3070bdc8bc64";
+  unstable = import <unstable> {};
+  old = import <old> {};
+    
+  in { 
 
-# Управление мышью (Зажать SUPER и тянуть)
-bindm = $mainMod, mouse:272, movewindow
-bindm = $mainMod, mouse:273, resizewindow
+    imports =
+      [ 
+          ./programm-configs.nix
+      ];
+
+  <<users>>
+  <<mandoc>>
+  <<nixos>>
+  <<boot-vinga>>
+  <<filesystem-vinga>>
+  <<services-vinga>>
+  <<enviroments-vinga>>
+  <<all-packages-vinga>>
+  }
 #+end_src
+*** пакеты
 #+header: :noweb-ref packages-vinga
 #+begin_src nix
  
@@ -1001,6 +1094,288 @@ bindm = $mainMod, mouse:273, resizewindow
     # Шрифты для иконок на панели
     font-awesome
  
+#+end_src
+
+
+*** nwg-panel
+#+begin_src bash
+[
+  {
+    "name": "panel-top",
+    "output": "",
+    "layer": "bottom",
+    "position": "top",
+    "controls": "right",
+    "width": "auto",
+    "height": 30,
+    "homogeneous": true,
+    "margin-top": 0,
+    "margin-bottom": 0,
+    "padding-horizontal": 0,
+    "padding-vertical": 0,
+    "spacing": 0,
+    "items-padding": 0,
+    "icons": "light",
+    "css-name": "panel-top",
+    "modules-left": [
+      "button-sample",
+      "playerctl"
+    ],
+    "modules-center": [
+      "clock"
+    ],
+    "modules-right": [
+      "sway-mode"
+    ],
+    "controls-settings": {
+      "components": [
+        "brightness",
+        "volume",
+        "battery"
+      ],
+      "commands": {
+        "battery": ""
+      },
+      "show-values": false,
+      "interval": 1,
+      "icon-size": 16,
+      "hover-opens": false,
+      "leave-closes": true,
+      "click-closes": false,
+      "css-name": "controls-window",
+      "custom-items": [
+        {
+          "name": "Panel settings",
+          "icon": "nwg-panel",
+          "cmd": "nwg-panel-config"
+        }
+      ],
+      "menu": {
+        "name": "Exit",
+        "icon": "system-shutdown-symbolic",
+        "items": [
+          {
+            "name": "Lock",
+            "cmd": "swaylock -f -c 000000"
+          },
+          {
+            "name": "Logout",
+            "cmd": "swaymsg exit"
+          },
+          {
+            "name": "Reboot",
+            "cmd": "systemctl reboot"
+          },
+          {
+            "name": "Shutdown",
+            "cmd": "systemctl -i poweroff"
+          }
+        ]
+      }
+    },
+    "tray": {
+      "root-css-name": "tray",
+      "inner-css-name": "inner-tray"
+    },
+    "sway-taskbar": {
+      "workspace-menu": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8"
+      ],
+      "name-max-len": 20,
+      "image-size": 16,
+      "workspaces-spacing": 0,
+      "task-padding": 0,
+      "show-app-icon": true,
+      "show-app-name": true,
+      "show-layout": true,
+      "workspace-buttons": false,
+      "all-workspaces": true,
+      "mark-autotiling": true,
+      "mark-xwayland": true,
+      "all-outputs": true
+    },
+    "sway-workspaces": {
+      "numbers": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8"
+      ]
+    },
+    "clock": {
+      "format": "%a, %d. %b  %H:%M:%S",
+      "tooltip-text": "",
+      "on-left-click": "",
+      "on-middle-click": "",
+      "on-right-click": "",
+      "on-scroll-up": "",
+      "on-scroll-down": "",
+      "css-name": "clock",
+      "interval": 1
+    },
+    "playerctl": {
+      "buttons-position": "left",
+      "icon-size": 16,
+      "chars": 30,
+      "scroll": false,
+      "button-css-name": "",
+      "label-css-name": "",
+      "interval": 1
+    },
+    "button-sample": {
+      "command": "notify-send 'sample button'",
+      "icon": "view-grid",
+      "label": "",
+      "label-position": "right",
+      "css-name": "button-custom",
+      "icon-size": 16
+    },
+    "menu-start": "off",
+    "exclusive-zone": true,
+    "sigrt": 64,
+    "use-sigrt": false,
+    "scratchpad": {},
+    "sway-mode": {},
+    "openweather": {},
+    "brightness-slider": {},
+    "dwl-tags": {},
+    "hyprland-taskbar": {},
+    "hyprland-workspaces": {}
+  },
+  {
+    "name": "panel-bottom",
+    "output": "",
+    "layer": "bottom",
+    "position": "bottom",
+    "controls": "off",
+    "width": "auto",
+    "height": 30,
+    "margin-top": 0,
+    "margin-bottom": 0,
+    "padding-horizontal": 6,
+    "padding-vertical": 0,
+    "spacing": 0,
+    "items-padding": 0,
+    "icons": "",
+    "css-name": "panel-bottom",
+    "modules-left": [
+      "sway-taskbar"
+    ],
+    "modules-center": [],
+    "modules-right": [
+      "executor-weather"
+    ],
+    "controls-settings": {
+      "components": [
+        "brightness",
+        "volume",
+        "battery"
+      ],
+      "commands": {
+        "battery": ""
+      },
+      "show-values": false,
+      "interval": 1,
+      "icon-size": 16,
+      "hover-opens": false,
+      "leave-closes": true,
+      "click-closes": false,
+      "css-name": "controls-window",
+      "custom-items": [
+        {
+          "name": "Panel settings",
+          "icon": "nwg-panel",
+          "cmd": "nwg-panel-config"
+        }
+      ],
+      "menu": {
+        "name": "unnamed",
+        "icon": "",
+        "items": []
+      }
+    },
+    "sway-taskbar": {
+      "workspace-menu": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8"
+      ],
+      "name-max-len": 20,
+      "image-size": 16,
+      "workspaces-spacing": 0,
+      "task-padding": 0,
+      "show-app-icon": true,
+      "show-app-name": true,
+      "show-layout": true,
+      "workspace-buttons": false,
+      "all-workspaces": true,
+      "mark-autotiling": true,
+      "mark-xwayland": true,
+      "all-outputs": false
+    },
+    "sway-workspaces": {
+      "numbers": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8"
+      ]
+    },
+    "clock": {
+      "format": "%a, %d. %b  %H:%M:%S",
+      "tooltip-text": "",
+      "on-left-click": "",
+      "on-middle-click": "",
+      "on-right-click": "",
+      "on-scroll-up": "",
+      "on-scroll-down": "",
+      "css-name": "clock",
+      "interval": 1
+    },
+    "playerctl": {
+      "buttons-position": "left",
+      "icon-size": 16,
+      "chars": 30,
+      "scroll": false,
+      "button-css-name": "",
+      "label-css-name": "",
+      "interval": 1
+    },
+    "executor-weather": {
+      "script": "curl https://wttr.in/?format=1 -s",
+      "interval": 1800,
+      "css-name": "weather",
+      "on-right-click": "",
+      "icon-size": 16,
+      "show-icon": true,
+      "tooltip-text": "",
+      "on-left-click": "",
+      "on-middle-click": "",
+      "on-scroll-up": "",
+      "on-scroll-down": ""
+    }
+  }
+]
 #+end_src
 * vinga - компʼютер с внутреннего диска
 #+header: :tangle ~/Linux/nixosconfig/configuration.nix :mkdirp yes :noweb yes
@@ -1060,6 +1435,7 @@ in {
 <<all-packages-vinga>>
 }
 #+end_src
+
 * samsung r60 ноутбук
 ,#+header: :tangle ~/Linux/nixosconfig-test/samsungr60/configuration.nix :mkdirp yes
 #+begin_src nix

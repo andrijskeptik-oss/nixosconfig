@@ -394,6 +394,34 @@ in
     wantedBy = [ "graphical-session.target" ];
   };
  
+
+services.ollama = {
+  enable = true;
+  acceleration = "cuda"; # Автоматически подключает нужные библиотеки
+};
+virtualisation.docker.enableNvidia = true;
+
+services.open-webui = {
+  enable = true;
+  port = 8080;
+  
+  environment = {
+    # Вимикаємо авторизацію (режим одного користувача)
+    WEBUI_AUTH = "False";
+    
+    # ПОВНИЙ OFFLINE РЕЖИМ
+    OFFLINE_MODE = "True";
+    
+    # Додаткові налаштування приватності
+    ANONYMIZED_TELEMETRY = "False";
+    DO_NOT_TRACK = "True";
+    HF_HUB_OFFLINE = "1"; # Наказує бібліотекам Hugging Face не лізти в інет
+    
+    # Зв'язок з Ollama
+    OLLAMA_API_BASE_URL = "http://127.0.0.1:11434";
+  };
+};
+
   environment.variables =  {
 #      EDITOR = "emacs -nw";
       VISUAL = "emacsclient -c";
@@ -602,17 +630,6 @@ gnumake # для разрабочиков ПО
 nodejs
 postgresql # сервер базы данных
 jupyter-all
-python312Packages.beautifulsoup4
-python312Packages.nltk
-python312Packages.transformers
-python312Packages.spacy
-python312Packages.stanza
-python312Packages.ipython
-html2text
-ocrmypdf 
-python312Packages.pandoc-xnos
-python312Packages.pdf2docx
-python312Packages.weasyprint
 pipx 
 sqlite # работа з базой данных
 sqlitebrowser # просмотр базы данных
@@ -663,14 +680,30 @@ p7zip # архиватор
     pdf2odt
     pdfchain
     qpdf
-    python312Packages.html2text
-    python312Packages.ocrmypdf 
-    python312Packages.pandoc-xnos
-    python312Packages.pdf2docx
-    python312Packages.weasyprint
-    whisper-ctranslate2
+    html2text
+    ocrmypdf 
+    python311Packages.html2text
+    python311Packages.beautifulsoup4
+    python311Packages.pandoc-xnos
+    python311Packages.pdf2docx
+    python311Packages.weasyprint
     zathura # просмотр pdf
     crow-translate 
+nvtopPackages.nvidia
+nvidia-container-toolkit
+nvtop
+ollama
+cudaPackages.cudatoolkit
+linuxPackages.nvidia_x11
+nvtopPackages.nvidia
+python311Packages.openai-whisper
+python311Packages.faster-whisper
+python311Packages.torch-bin  
+python311Packages.nltk
+python311Packages.transformers
+python311Packages.spacy
+python311Packages.ipython
+python311Packages.stanza
 
    # Панель и интерфейс под мышь
    nwg-panel nwg-look nwg-drawer nwg-bar nwg-menu
