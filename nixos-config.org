@@ -232,12 +232,12 @@
 ** flake
 #+header: :noweb-ref nixos
 #+begin_src nix
-  nix.settings.experimental-features = [ "nix-command" "flakes" ];
+nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
-  nix.settings = {
-    substituters = [ "https://cosmic.cachix.org/" ];
-    trusted-public-keys = [ "cosmic.cachix.org-1:D7qyvC9i7c81hyTfmDnC5ovC1WZ0HcyHBPUMwFx78s8=" ];
-  };
+#  nix.settings = {
+#    substituters = [ "https://cosmic.cachix.org/" ];
+#    trusted-public-keys = [ "cosmic.cachix.org-1:D7qyvC9i7c81hyTfmDnC5ovC1WZ0HcyHBPUMwFx78s8=" ];
+#  };
 
 #+end_src
 #+header: :noweb-ref flake
@@ -246,23 +246,26 @@
   description = "Vinga NixOS";
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-24.11";
-    hyprland.url = "github:hyprwm/Hyprland";
-#    nixos-cosmic.url = "github:lilyinstarlight/nixos-cosmic";
-#    nixos-cosmic.inputs.nixpkgs.follows = "nixpkgs";
+    nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
+ 
+  
  };
 
-#  outputs = { self, nixpkgs,nixos-cosmic,  ... }:
-  outputs = { self, nixpkgs, hyprland, ... }:
-  {
-    nixosConfigurations.vinga = nixpkgs.lib.nixosSystem {
-      system = "x86_64-linux";
-      specialArgs = { inherit hyprland; };
-      modules = [
-        ./configuration.nix
-#        nixos-cosmic.nixosModules.default
-      ];
+   outputs = { self, nixpkgs, nixpkgs-unstable, ... }@inputs:
+    let
+      system = "x86_64-linux"; 
+      unstable = import nixpkgs-unstable {
+        inherit system;
+        config.allowUnfree = true; 
+      };
+    in {
+      nixosConfigurations.vinga = nixpkgs.lib.nixosSystem {
+        inherit system;
+        specialArgs = { inherit unstable; }; 
+        modules = [ ./configuration.nix ];
+      };
     };
-  };
+ 
 }
 #+end_src
 ** services 
@@ -887,8 +890,8 @@ aliases
 
   services.ollama = {
     enable = true;
-    acceleration = "cuda"; # Автоматически подключает нужные библиотеки
-  };
+    acceleration = "cuda";
+    };
   virtualisation.docker.enableNvidia = true;
 
   services.open-webui = {
@@ -922,7 +925,7 @@ aliases
     nvtopPackages.nvidia
     nvidia-container-toolkit
     nvtop
-    ollama
+    unstable.ollama
     cudaPackages.cudatoolkit
     linuxPackages.nvidia_x11
     nvtopPackages.nvidia
@@ -1058,8 +1061,7 @@ programs.appimage.enable = true;
   { config, pkgs, ... }:
   let as_host="vinga usb";
   system_disk="/dev/disk/by-uuid/b6affbcd-6022-4593-a686-3070bdc8bc64";
-  unstable = import <unstable> {};
-  old = import <old> {};
+#   old = import <old> {};
     
   in { 
 
@@ -1380,13 +1382,12 @@ programs.appimage.enable = true;
 * vinga - компʼютер с внутреннего диска
 #+header: :tangle ~/Linux/nixosconfig/configuration.nix :mkdirp yes :noweb yes
 #+begin_src nix
-{ config, pkgs, lib, ... }:
+{ config, pkgs, unstable, lib, ... }:
 let as_host="vinga";
 system_disk= "/dev/disk/by-uuid/412a5eab-b8be-405d-a6b3-adeddbbf8500";  
 data_disk= "/dev/disk/by-uuid/0087db31-e714-4942-8eea-3686c68be358";  
 backup_disk= "/dev/disk/by-uuid/b6affbcd-6022-4593-a686-3070bdc8bc64";  
-unstable = import <unstable> {};
-old = import <old> {};  
+  
 in { 
 
   imports =

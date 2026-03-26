@@ -1,10 +1,9 @@
-{ config, pkgs, lib, ... }:
+{ config, pkgs, unstable, lib, ... }:
 let as_host="vinga";
 system_disk= "/dev/disk/by-uuid/412a5eab-b8be-405d-a6b3-adeddbbf8500";  
 data_disk= "/dev/disk/by-uuid/0087db31-e714-4942-8eea-3686c68be358";  
 backup_disk= "/dev/disk/by-uuid/b6affbcd-6022-4593-a686-3070bdc8bc64";  
-unstable = import <unstable> {};
-old = import <old> {};  
+  
 in { 
 
   imports =
@@ -54,10 +53,10 @@ system.stateVersion = "25.11"; # Вы читали комментарий?
 system.autoUpgrade.enable = false;
 nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
-nix.settings = {
-  substituters = [ "https://cosmic.cachix.org/" ];
-  trusted-public-keys = [ "cosmic.cachix.org-1:D7qyvC9i7c81hyTfmDnC5ovC1WZ0HcyHBPUMwFx78s8=" ];
-};
+#  nix.settings = {
+#    substituters = [ "https://cosmic.cachix.org/" ];
+#    trusted-public-keys = [ "cosmic.cachix.org-1:D7qyvC9i7c81hyTfmDnC5ovC1WZ0HcyHBPUMwFx78s8=" ];
+#  };
 
 fonts.packages = with pkgs; [
 #    google-fonts
@@ -397,8 +396,8 @@ in
 
 services.ollama = {
   enable = true;
-  acceleration = "cuda"; # Автоматически подключает нужные библиотеки
-};
+  acceleration = "cuda";
+  };
 virtualisation.docker.enableNvidia = true;
 
 services.open-webui = {
@@ -692,7 +691,7 @@ p7zip # архиватор
 nvtopPackages.nvidia
 nvidia-container-toolkit
 nvtop
-ollama
+unstable.ollama
 cudaPackages.cudatoolkit
 linuxPackages.nvidia_x11
 nvtopPackages.nvidia

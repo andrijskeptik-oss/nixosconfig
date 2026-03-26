@@ -1,84 +1,4 @@
-#+name: delux
-#+header: :tangle /home/andrey/.config/home-manager/home.nix :mkdirp yes :noweb yes
-#+begin_src nix
-{ config, pkgs, ... }:
-
-{
-  # Home Manager needs a bit of information about you and the paths it should
-  # manage.
-  home.username = "andrey";
-  home.homeDirectory = "/home/andrey";
-
-  # This value determines the Home Manager release that your configuration is
-  # compatible with. This helps avoid breakage when a new Home Manager release
-  # introduces backwards incompatible changes.
-  #
-  # You should not change this value, even if you update Home Manager. If you do
-  # want to update the value, then make sure to first check the Home Manager
-  # release notes.
-  home.stateVersion = "22.11"; # Please read the comment before changing.
-
-  # The home.packages option allows you to install Nix packages into your
-  # environment.
-  home.packages = [
-    # # Adds the 'hello' command to your environment. It prints a friendly
-    # # "Hello, world!" when run.
-    # pkgs.hello
-
-    # # It is sometimes useful to fine-tune packages, for example, by applying
-    # # overrides. You can do that directly here, just don't forget the
-    # # parentheses. Maybe you want to install Nerd Fonts with a limited number of
-    # # fonts?
-    # (pkgs.nerdfonts.override { fonts = [ "FantasqueSansMono" ]; })
-
-    # # You can also create simple shell scripts directly inside your
-    # # configuration. For example, this adds a command 'my-hello' to your
-    # # environment:
-    # (pkgs.writeShellScriptBin "my-hello" ''
-    #   echo "Hello, ${config.home.username}!"
-    # '')
-  ];
-
-  # Home Manager is pretty good at managing dotfiles. The primary way to manage
-  # plain files is through 'home.file'.
-  home.file = {
-    # # Building this configuration will create a copy of 'dotfiles/screenrc' in
-    # # the Nix store. Activating the configuration will then make '~/.screenrc' a
-    # # symlink to the Nix store copy.
-    # ".screenrc".source = dotfiles/screenrc;
-
-    # # You can also set the file content immediately.
-    # ".gradle/gradle.properties".text = ''
-    #   org.gradle.console=verbose
-    #   org.gradle.daemon.idletimeout=3600000
-    # '';
-   <<delux-home-files>>
-
-  };
-
-  # You can also manage environment variables but you will have to manually
-  # source
-  #
-  #  ~/.nix-profile/etc/profile.d/hm-session-vars.sh
-  #
-  # or
-  #
-  #  /etc/profiles/per-user/andrey/etc/profile.d/hm-session-vars.sh
-  #
-  # if you don't want to manage your shell through Home Manager.
-    home.sessionVariables = {
- #    EDITOR = "emacsclient";
-  };
-
-  # Let Home Manager install and manage itself.
- programs ={
-  home-manager.enable = true;
-  <<delux-home-programs>>
-  };
-  
-}
-#+end_src 
-
+#+name: vinga
 * программы
 ** qutebrowser
 *** config
@@ -198,7 +118,7 @@ def my_search_engines ():
            [['ss'], 'https://www.social-searcher.com/social-buzz/?q5={}'], 
            [['gt'], 'https://translate.google.com/#view=home&op=translate&sl=auto&tl=ru&text={}'], 
            [['weba'], 'https://web.archive.org/web/*/{}'], 
-           [['mg'], 'https://www.google.com/maps/search/{}'], 
+           [['gm'], 'https://www.google.com/maps/search/{}'], 
            [['emogi'], 'https://emojipedia.org/search/?q={}'], 
            [['p'], 'https://www.speedguide.net/port.php?port={}'], 
            [['p1'], 'https://www.speedguide.net/ports.php?filter={}'], 
@@ -221,7 +141,7 @@ c.url.searchengines=my_search_engines()
 
 c.auto_save.session = True
 
-c.zoom.default = "175%"
+c.zoom.default = "150%"
 
 c.colors.webpage.darkmode.algorithm = 'lightness-cielab'
 c.colors.webpage.darkmode.enabled = False
@@ -269,313 +189,300 @@ c.fileselect.folder.command=select_in_emacs_command
   
 #+end_src
 **** Назначение клавиш
-***** Открыть uri
+***** Открыть uri+
 #+begin_src python :noweb-ref qutebrowser-config
 d_open_url={
-'cmd-set-text -s :open -t' : ['<Ctrl-x><Ctrl-x>'],
-'cmd-set-text -s :open ' : ['<Ctrl-x><Ctrl-f>'],
-# 'cmd-set-text -s :open -p' : ['wp','цз'],
-# 'cmd-set-text -s :open -b' : ['wb','ци'],
-# 'cmd-set-text -s :open -w {url}' : ['wu','цг'],
-# 'cmd-set-text -s :open -t {url}' : ['wU','цГ'],
-'cmd-set-text -s :open -t {clipboard}' : ['pp','зз'],
-'cmd-set-text -s :open -t {primary}' : ['pP','зЗ'],
-'cmd-set-text -s :open  {clipboard}' : ['Pp','Зз'],
-'cmd-set-text -s :open  {primary}' : ['PP','ЗЗ'],
+'cmd-set-text -s :open -t' : ['<Ctrl-X><Ctrl-X>'],
+'cmd-set-text -s :open ' : ['<Ctrl-X><Ctrl-F>'],
+'cmd-set-text -s :open -t {clipboard}' : ['<Ctrl-X><Ctrl-W><Ctrl-X>'],
+'cmd-set-text -s :open -t {primary}' : ['<Ctrl-X><Alt-W><Ctrl-X>'],
+'cmd-set-text -s :open  {clipboard}' : ['<Ctrl-X><Ctrl-W><Ctrl-F>'],
+'cmd-set-text -s :open  {primary}' : ['<Ctrl-X><Alt-W><Ctrl-F>'],
 }
 #+end_src
-***** Хинты
+***** Хинты+
 #+begin_src python :noweb-ref qutebrowser-config
-d_hints={
-'hint images window' : ['<Ctrl-x>5<Ctrl-c>i','<Ctrl-x>5<Ctrl-c>ш'],
-'hint images' : ['<Ctrl-c>i','<Ctrl-c>ш'],
-#'hint links fill :open -t -r {hint-url}' : ['<Alt-g>o','<Alt-g>щ'],
-#'hint links fill :open {hint-url}' : ['<Alt-g>O','<Alt-g>Щ'],
-#'hint links yank' : ['<Alt-g>y','<Alt-g>н'],
-#'hint links yank-primary' : ['<Alt-g>Y','<Alt-g>Н'],
-#'hint all tab-bg' : ['<Alt-g>b','<Alt-g>и'],
-#'hint links download' : ['<Alt-g>d','<Alt-g>в'],
-#'hint all window' : ['<Alt-g><Ctrl-g>'],
-#'hint all tab-fg' : ['<Ctrl-u><Alt-G><Alt-G>'],
-#'hint --rapid links tab-bg' : ['<Alt-g>r','<Alt-g>к'],
-'hint all hover' : ['<Ctrl-c>h','<Ctrl-c>н'],
-'hint inputs' : ['<Ctrl-c>t','<Ctrl-c>е'],
-'hint' : ['<Ctrl-c>o','<Ctrl-c>щ'],
-'hint inputs --first' : ['<Ctrl-u><Ctrl-c>t','<Ctrl-u><Ctrl-c>е'],
- }
+  d_hints={
+  'hint images window' : ['<Ctrl-X>5<Ctrl-C><Ctrl-I>'],
+  'hint images' : ['<Ctrl-C><Ctrl-I>'],
+  'hint links fill :open -t -r {hint-url}' : ['<Ctrl-C><Ctrl-X>'],
+  'hint links fill :open {hint-url}' : ['<Ctrl-C><Ctrl-F>'],
+  'hint links yank' : ['<Ctrl-C><Ctrl-W>'],
+  'hint links yank-primary' :['<Ctrl-C><Alt-W>'],
+  'hint all tab-bg' : ['<Ctrl-C><Ctrl-T>'],
+  'hint links download' : ['<Ctrl-C><Ctrl-D>'],
+  'hint all window' : ['<Ctrl-X>5<Ctrl-C>'],
+  'hint all tab-fg' : ['<Ctrl-U><Ctrl-C><Ctrl-T>'],
+  'hint --rapid links tab-bg' : ['<Ctrl-C><Ctrl-M>'],
+  'hint all hover' : ['<Ctrl-C><Ctrl-H>'],
+  'hint inputs' : ['<Ctrl-C><Ctrl-R>'],
+  'hint' : ['<Ctrl-C><Ctrl-C>'],
+  'hint inputs --first' : ['<Ctrl-U><Ctrl-C><Ctrl-R>'],
+   }
 #+end_src
-***** Вкладки
+***** Вкладки+
 #+begin_src python :noweb-ref qutebrowser-config
 d_tabs={
-'tab-next' : ['<Ctrl-x>t<Right>','<Ctrl-x>е<Right>'],
-'tab-prev' : ['<Ctrl-x>t<Left>','<Ctrl-x>е<Left>'],
-'tab-focus last' : ['<Ctrl-x>t ','<Ctrl-x>е '],
-'tab-pin' : ['<Ctrl-x>tp','<Ctrl-x>ез'],
-'tab-close' : ['<Pause>','<Ctrl-x>k','<Ctrl-x>д'],
-'cmd-set-text -sr :tab-focus' : ['<Ctrl-x>tt','<Ctrl-x>ее'],
-'tab-only' : ['<Ctrl-x>t1','<Ctrl-x>е1'],
-'tab-focus -1' : ['<Ctrl-x>t$',';<Ctrl-x>е;'],
-'tab-focus 1' : ['<Ctrl-x>t^','<Ctrl-x>е:'],
-'tab-clone' : ['<Ctrl-x>tc','<Ctrl-x>ес'],
-#'tab-give -p' : ['<Ctrl-x>tg','<Ctrl-x>еп'],
-#'cmd-set-text -s :tab-take' : ['<Ctrl-x>tw','<Ctrl-x>ец'],
+'tab-next' : ['<Ctrl-T><Ctrl-Right>','<Ctrl-T><Right>'],
+'tab-prev' : ['<Ctrl-T><Ctrl-Left>','<Ctrl-T><Left>'],
+'tab-focus last' : ['<Ctrl-T><Backspace>'],
+'tab-pin' : ['<Ctrl-T><Ctrl-P>'],
+'tab-close' : ['<Pause>','<Ctrl-X><Ctrl-K>'],
+'cmd-set-text -sr :tab-focus' : ['<Ctrl-T><Ctrl-T>'],
+'tab-only' : ['<Ctrl-T><Ctrl-X>1'],
+'tab-clone' : ['<Ctrl-T><Ctrl-C>'],
+'tab-give -p' : ['<Ctrl-X>5<Ctrl-T>'],
+'cmd-set-text -s :tab-take' : ['<Ctrl-U><Ctrl-X>5<Ctrl-T>'],
 
-'tab-move' : ['<Ctrl-x>tm','<Ctrl-x>еь'],
-'tab-mute' : ['<Ctrl-x>ts','<Ctrl-x>еі'],
+'tab-move +' : ['<Ctrl-T><Ctrl-PgUp>','<Ctrl-T><PgUp>'],
+'tab-move -' : ['<Ctrl-T><Ctrl-PgDown>','<Ctrl-T><PgDown>'],
+'tab-mute' : ['<Ctrl-T><Ctrl-M>'],
 }
 #+end_src
-***** Окна
+***** Окна+
 #+begin_src python :noweb-ref qutebrowser-config
 d_windows={
-'open -w' : ['<Ctrl-x>5<Ctrl-x><Ctrl-x>'],
+'open -w' : ['<Ctrl-X>5<Ctrl-X>'],
 }
 #+end_src
-***** Закладки
+***** Закладки+
 #+begin_src python :noweb-ref qutebrowser-config
 d_bookmarks={
 #'home' : ['~'],
-'cmd-set-text -s :quickmark-load -t' : ['<Ctrl-x>rq','<Ctrl-x>кй'],
-#'cmd-set-text -s :quickmark-load ' : ['B','И'],
-'cmd-set-text -s :bookmark-load -t' : ['<Ctrl-x>rb','<Ctrl-x>ки'],
-#'cmd-set-text -s :bookmark-load ' : ['gB','пИ'],
-'quickmark-save' : ['<Ctrl-x>rM','<Ctrl-x>кЬ'],
-'bookmark-add' : ['<Ctrl-x>rm','<Ctrl-x>кь'],
-'bookmark-list -t' : ['<Ctrl-x>rl','<Ctrl-x>кд'],
+'cmd-set-text -s :quickmark-load -t' : ['<Ctrl-X><Ctrl-Q>'],
+'cmd-set-text -s :bookmark-load -t' : ['<Ctrl-X>rb','<Ctrl-X>ки','<Ctrl-X><Ctrl-B>'],
+'quickmark-save' : ['<Ctrl-X>rM','<Ctrl-X>кЬ'],
+'bookmark-add' : ['<Ctrl-X>rm','<Ctrl-X>кь'],
+'bookmark-list -t' : ['<Ctrl-X>rl','<Ctrl-X>кд','<Ctrl-X><Ctrl-L>'],
 }
 #+end_src
 
 
-***** История, навигация по url
+***** История, навигация по url+
 #+begin_src python :noweb-ref qutebrowser-config
 d_history={
-'navigate decrement' : ['gu+','пг+'],
-'navigate increment' : ['gu-','пг_'],
-'back' : ['<Alt-p>'],
-'forward' : ['<Alt-n>'],
-#'navigate prev' : ['[[','хх'],
-#'navigate next' : [']]','її'],
-#'navigate prev -t' : ['{{','ХХ'],
-#'navigate next -t' : ['}}','ЇЇ'],
-#'history -t' : ['hh','рр'],
-#'navigate up' : ['gu<Up>','пг<Up>'],
-#'back -w' : ['ht<Left>','ре<Left>'],
-'scroll-to-perc 0' : ['Alt-<'],
-#'navigate up -w' : ['gU<Up>','пГ<Up>'],
-#'forward -w' : ['hw<Right>','рц<Right>'],
-'scroll-to-perc' : ['Alt->'],
+'navigate decrement' : ['<Ctrl-N>+'],
+'navigate increment' : ['<Ctrl-N>-'],
+'back' : ['<Alt-P>'],
+'forward' : ['<Alt-N>'],
+'navigate prev' : ['<Ctrl-N>P'],
+'navigate next' : ['<Ctrl-N>N'],
+'navigate prev -t' : ['<Ctrl-N><Ctrl-T>P'],
+'navigate next -t' : ['<Ctrl-N><Ctrl-T>P'],
+'history -t' : ['<Alt-h>'],
+'navigate up' : ['<Ctrl-N><Ctrl-<Up>','<Ctrl-N><Up>'],
+'back -w' : ['<Ctrl-X>5<Alt-P>'],
+'scroll-to-perc 0' : ['<Alt-,>'],
+'navigate up -w' : ['<Ctrl-X>5<Ctrl-N><Ctrl-<Up>','<Ctrl-X>5<Ctrl-N><Up>'],
+'forward -w' : ['<Ctrl-X>5<Alt-N>'],
+'scroll-to-perc' : ['<Alt-.>'],
 }
 #+end_src
-***** Изменение масштаба
+***** Изменение масштаба+
 #+begin_src python :noweb-ref qutebrowser-config
 d_zoom={
-'zoom-in' : ['Ctrl-+'],
-'zoom-out' : ['Ctrl--'],
-'zoom' : ['Ctrl-='],
+'zoom-in' : ['<Ctrl-+>'],
+'zoom-out' : ['<Ctrl-->'],
+'zoom' : ['<Ctrl-=>'],
 }
 #+end_src
-***** Буфер обмена
+***** Буфер обмена+
 #+begin_src python :noweb-ref qutebrowser-config
 d_clipboard={
-'yank domain' : ['yd','нв'],
-'yank domain -s' : ['Yd','Нв'],
-'yank inline [{title}]({url})' : ['ym','нь'],
-'yank inline [{title}]({url}) -s' : ['Ym','Нь'],
-'yank inline [[{url}][{title}]]' : ['yo','нщ'],
-'yank inline [[{url}][{title}]] -s' : ['Yo','Нщ'],
-'yank pretty-url' : ['yp','нз'],
-'yank pretty-url -s' : ['Yp','Нз'],
-'yank title' : ['yt','не'],
-'yank title -s' : ['Yt','Не'],
-'yank' : ['yy','нн'],
-'yank -s' : ['YY','НН'],
+'yank domain' : ['<Ctrl-W><Ctrl-D>'],
+'yank domain -s' : ['<Alt-W><Alt-D>'],
+'yank inline [{title}]({url})' : ['<Ctrl-W><Ctrl-M>'],
+'yank inline [{title}]({url}) -s' : ['<Alt-W><Alt-M>'],
+'yank inline [[{url}][{title}]]' : ['<Ctrl-W><Ctrl-O>'],
+'yank inline [[{url}][{title}]] -s' : ['<Alt-W><Alt-O>'],
+'yank pretty-url' : ['<Ctrl-W><Ctrl-P>'],
+'yank pretty-url -s' : ['<Alt-W><Alt-P>'],
+'yank title' : ['<Ctrl-W><Ctrl-T>'],
+'yank title -s' : ['<Alt-W><Alt-T>'],
+'yank' : ['<Ctrl-W><Ctrl-W>'],
+'yank -s' : ['<Alt-W><Alt-W>'],
 }
 #+end_src
 ***** Параметры конфигурации
 #+begin_src python :noweb-ref qutebrowser-config
 d_config={
-'cmd-set-text -s :set -t' : ['ss','іі'],
-'cmd-set-text -s :set' : ['SS','ІІ'],
-'cmd-set-text -s :bind' : ['sb','іи'],
-'cmd-set-text -s :set messages.timeout' : ['sm','іь'],
-'config-cycle -p -u *://*.{url:host}/* content.cookies.accept all no-3rdparty never ;; reload' : ['TCH','ЕСР'],
-'config-cycle -p -u *://{url:host}/* content.cookies.accept all no-3rdparty never ;; reload' : ['TCh','ЕСр'],
-'config-cycle -p -u {url} content.cookies.accept all no-3rdparty never ;; reload' : ['TCu','ЕСг'],
-'config-cycle -p -u *://*.{url:host}/* content.images ;; reload' : ['TIH','ЕШР'],
-'config-cycle -p -u *://{url:host}/* content.images ;; reload' : ['TIh','ЕШр'],
-'config-cycle -p -u {url} content.images ;; reload' : ['TIu','ЕШг'],
-'config-cycle -p -u *://*.{url:host}/* content.plugins ;; reload' : ['TPH','ЕЗР'],
-'config-cycle -p -u *://{url:host}/* content.plugins ;; reload' : ['TPh','ЕЗр'],
-'config-cycle -p -u {url} content.plugins ;; reload' : ['TPu','ЕЗг'],
-'config-cycle -p -u *://*.{url:host}/* content.javascript.enabled ;; reload' : ['TSH','ЕІР'],
-'config-cycle -p -u *://{url:host}/* content.javascript.enabled ;; reload' : ['TSh','ЕІр'],
-'config-cycle -p -u {url} content.javascript.enabled ;; reload' : ['TSu','ЕІг'],
-'config-cycle -p -t -u *://*.{url:host}/* content.cookies.accept all no-3rdparty never ;; reload' : ['TcH','ЕсР'],
-'config-cycle -p -t -u *://{url:host}/* content.cookies.accept all no-3rdparty never ;; reload' : ['Tch','Еср'],
-'config-cycle -p -t -u {url} content.cookies.accept all no-3rdparty never ;; reload' : ['Tcu','Есг'],
-'config-cycle -p -t -u *://*.{url:host}/* content.images ;; reload' : ['TiH','ЕшР'],
-'config-cycle -p -t -u *://{url:host}/* content.images ;; reload' : ['Tih','Ешр'],
-'config-cycle -p -t -u {url} content.images ;; reload' : ['Tiu','Ешг'],
-'config-cycle -p -t -u *://*.{url:host}/* content.plugins ;; reload' : ['TpH','ЕзР'],
-'config-cycle -p -t -u *://{url:host}/* content.plugins ;; reload' : ['Tph','Езр'],
-'config-cycle -p -t -u {url} content.plugins ;; reload' : ['Tpu','Езг'],
-'config-cycle -p -t -u *://*.{url:host}/* content.javascript.enabled ;; reload' : ['TsH','ЕіР'],
-'config-cycle -p -t -u *://{url:host}/* content.javascript.enabled ;; reload' : ['Tsh','Еір'],
-'config-cycle -p -t -u {url} content.javascript.enabled ;; reload' : ['Tsu','Еіг'],
+#'cmd-set-text -s :set -t' : ['ss','іі'],
+#'cmd-set-text -s :set' : ['SS','ІІ'],
+#'cmd-set-text -s :bind' : ['sb','іи'],
+#'cmd-set-text -s :set messages.timeout' : ['sm','іь'],
+#'config-cycle -p -u *://*.{url:host}/* content.cookies.accept all no-3rdparty never ;; reload' : ['TCH','ЕСР'],
+#'config-cycle -p -u *://{url:host}/* content.cookies.accept all no-3rdparty never ;; reload' : ['TCh','ЕСр'],
+#'config-cycle -p -u {url} content.cookies.accept all no-3rdparty never ;; reload' : ['TCu','ЕСг'],
+#'config-cycle -p -u *://*.{url:host}/* content.images ;; reload' : ['TIH','ЕШР'],
+#'config-cycle -p -u *://{url:host}/* content.images ;; reload' : ['TIh','ЕШр'],
+#'config-cycle -p -u {url} content.images ;; reload' : ['TIu','ЕШг'],
+#'config-cycle -p -u *://*.{url:host}/* content.plugins ;; reload' : ['TPH','ЕЗР'],
+#'config-cycle -p -u *://{url:host}/* content.plugins ;; reload' : ['TPh','ЕЗр'],
+#'config-cycle -p -u {url} content.plugins ;; reload' : ['TPu','ЕЗг'],
+#'config-cycle -p -u *://*.{url:host}/* content.javascript.enabled ;; reload' : ['TSH','ЕІР'],
+#'config-cycle -p -u *://{url:host}/* content.javascript.enabled ;; reload' : ['TSh','ЕІр'],
+#'config-cycle -p -u {url} content.javascript.enabled ;; reload' : ['TSu','ЕІг'],
+#'config-cycle -p -t -u *://*.{url:host}/* content.cookies.accept all no-3rdparty never ;; reload' : ['TcH','ЕсР'],
+#'config-cycle -p -t -u *://{url:host}/* content.cookies.accept all no-3rdparty never ;; reload' : ['Tch','Еср'],
+#'config-cycle -p -t -u {url} content.cookies.accept all no-3rdparty never ;; reload' : ['Tcu','Есг'],
+#'config-cycle -p -t -u *://*.{url:host}/* content.images ;; reload' : ['TiH','ЕшР'],
+#'config-cycle -p -t -u *://{url:host}/* content.images ;; reload' : ['Tih','Ешр'],
+#'config-cycle -p -t -u {url} content.images ;; reload' : ['Tiu','Ешг'],
+#'config-cycle -p -t -u *://*.{url:host}/* content.plugins ;; reload' : ['TpH','ЕзР'],
+#'config-cycle -p -t -u *://{url:host}/* content.plugins ;; reload' : ['Tph','Езр'],
+#'config-cycle -p -t -u {url} content.plugins ;; reload' : ['Tpu','Езг'],
+#'config-cycle -p -t -u *://*.{url:host}/* content.javascript.enabled ;; reload' : ['TsH','ЕіР'],
+#'config-cycle -p -t -u *://{url:host}/* content.javascript.enabled ;; reload' : ['Tsh','Еір'],
+#'config-cycle -p -t -u {url} content.javascript.enabled ;; reload' : ['Tsu','Еіг'],
 }
 #+end_src
-***** Загрузки
+***** Загрузки+
 #+begin_src python :noweb-ref qutebrowser-config
 d_download={
-'download-cancel' : ['da','вф'],
-'download-delete' : ['dx','вч'],
-'download-clear' : ['dc','вс'],
-'download' : ['dd','вв'],
-'download-open' : ['do','вщ'],
+'download-cancel' : ['<Ctrl-D><Ctrl-G>'],
+'download-delete' : ['<Ctrl-D><Ctrl-K>'],
+'download-clear' : ['<Ctrl-D><Ctrl-C>'],
+'download' : ['<Ctrl-D><Ctrl-D>'],
+'download-open' : ['<Ctrl-D><Ctrl-O>'],
 }
 #+end_src
-***** Клавиши режима каретки
+***** Клавиши режима каретки+
 #+begin_src python :noweb-ref qutebrowser-config
 d_caret_mode={
-'move-to-end-of-line' : ['$',''],
-'move-to-start-of-line' : ['0',''],
-'selection-drop' : ['<Ctrl-Space>',''],
-'mode-leave' : ['<Escape>',''],
-'yank selection' : ['<Return>',''],
-'selection-toggle' : ['<Space>',''],
+'move-to-end-of-line' : ['<End>','Ctrl-E'],
+'move-to-start-of-line' : ['<Home>','<Ctrl-A>'],
+'selection-drop' : ['<Ctrl-Space>'],
+'mode-leave' : ['<Escape>','<Ctrl-G>'],
+'yank selection' : ['<Ctrl-W>'],
+'selection-toggle' : ['<Space>'],
 'move-to-end-of-document' : ['G','П'],
-'scroll left' : ['<Ctrl-Left>',''],
-'scroll down' : ['<Ctrl-Down>',''],
-'scroll up' : ['<Ctrl-Up>',''],
-'scroll right' : ['<Ctrl-Right>',''],
-'selection-toggle --line' : ['V','М'],
-'yank selection -s' : ['Y','Н'],
-'move-to-start-of-prev-block' : ['[','х'],
-'move-to-start-of-next-block' : [']','ї'],
-'move-to-prev-word' : ['b','и'],
-'mode-enter normal' : ['c','с'],
-'move-to-end-of-word' : ['e','у'],
-'move-to-start-of-document' : ['gg','пп'],
-'move-to-prev-char' : ['<Left>',''],
-'move-to-next-line' : ['<Down>',''],
-'move-to-prev-line' : ['<Up>',''],
-'move-to-next-char' : ['<Right>',''],
-'selection-reverse' : ['o','щ'],
-'selection-toggle' : ['v','м'],
-'move-to-next-word' : ['w','ц'],
-'yank selection' : ['y','н'],
-'move-to-end-of-prev-block' : ['{','Х'],
-'move-to-end-of-next-block' : ['}','Ї'],
+'scroll left' : ['<Ctrl-Left>'],
+'scroll down' : ['<Ctrl-Down>'],
+'scroll up' : ['<Ctrl-Up>'],
+'scroll right' : ['<Ctrl-Right>'],
+#'selection-toggle --line' : ['V','М'],
+'yank selection -s' : ['<Alt-W>'],
+'move-to-start-of-prev-block' : ['<Alt-A>'],
+'move-to-start-of-next-block' : ['<Alt-E>'],
+'move-to-prev-word' : ['<Alt-B>'],
+'mode-enter normal' : ['<Ctrl-G>'],
+'move-to-start-of-document' : ['<Alt-,>'],
+'move-to-prev-char' : ['<Left>','<Ctrl-B>'],
+'move-to-next-line' : ['<Down>','<Ctrl-N>'],
+'move-to-prev-line' : ['<Up>','<Ctrl-P>'],
+'move-to-next-char' : ['<Right>','<Ctrl-F>'],
+'selection-reverse' : ['<Ctrl-X><Ctrl-X>'],
+'move-to-next-word' : ['<Alt-F>'],
 }
 #+end_src
-***** Клавиши командного режима
+***** Клавиши командного режима+
 #+begin_src python :noweb-ref qutebrowser-config
 d_command_mode={
-'rl-backward-word' : ['<Alt-B>',''],
-'rl-backward-kill-word' : ['<Alt-Backspace>',''],
-'rl-kill-word' : ['<Alt-D>',''],
-'rl-forward-word' : ['<Alt-F>',''],
-'rl-delete-char' : ['<Ctrl-?>',''],
-'rl-beginning-of-line' : ['<Ctrl-A>',''],
-'rl-backward-char' : ['<Ctrl-B>',''],
-'completion-item-yank' : ['<Ctrl-C>',''],
-'completion-item-del' : ['<Ctrl-D>',''],
-'rl-end-of-line' : ['<Ctrl-E>',''],
-'rl-forward-char' : ['<Ctrl-F>',''],
-'rl-backward-delete-char' : ['<Ctrl-H>',''],
-'rl-kill-line' : ['<Ctrl-K>',''],
-'command-history-next' : ['<Ctrl-N>',''],
-'command-history-prev' : ['<Ctrl-P>',''],
-'command-accept --rapid' : ['<Ctrl-Return>',''],
-'completion-item-yank --sel' : ['<Ctrl-Shift-C>',''],
-'completion-item-focus prev-category' : ['<Ctrl-Shift-Tab>',''],
-'rl-filename-rubout' : ['<Ctrl-Shift-W>',''],
-'completion-item-focus next-category' : ['<Ctrl-Tab>',''],
-'rl-unix-line-discard' : ['<Ctrl-U>',''],
-'rl-rubout " "' : ['<Ctrl-W>',''],
-'rl-yank' : ['<Ctrl-Y>',''],
-'completion-item-focus --history next' : ['<Down>',''],
-'mode-leave' : ['<Escape>',''],
-'completion-item-focus next-page' : ['<PgDown>',''],
-'completion-item-focus prev-page' : ['<PgUp>',''],
-'command-accept' : ['<Return>',''],
-'completion-item-del' : ['<Shift-Delete>',''],
-'completion-item-focus prev' : ['<Shift-Tab>',''],
-'completion-item-focus next' : ['<Tab>',''],
-'completion-item-focus --history prev' : ['<Up>',''],
-'cmd-set-text -a {url}' : ['<Alt+Space>u','<Alt+Space>г'], 
-'cmd-set-text -a {url:pretty}' : ['<Alt+Space>w','<Alt+Space>ц'], 
-'cmd-set-text -a {url:host}' : ['<Alt+Space>h','<Alt+Space>р'], 
-'cmd-set-text -a {url:domain}' : ['<Alt+Space>d','<Alt+Space>в'], 
-'cmd-set-text -a {url:query}' : ['<Alt+Space>q','<Alt+Space>й'], 
-'cmd-set-text -a {url:port}' : ['<Alt+Space>p','<Alt+Space>з'], 
-'cmd-set-text -a {title}' : ['<Alt+Space>t','<Alt+Space>е'], 
-'cmd-set-text -a {clipboard}' : ['<Alt+Space>y','<Alt+Space>н'], 
-'cmd-set-text -a {primary}' : ['<Alt+Space>s','<Alt+Space>і'], 
+'rl-backward-word' : ['<Alt-B>'],
+'rl-backward-kill-word' : ['<Alt-Backspace>'],
+'rl-kill-word' : ['<Alt-D>'],
+'rl-forward-word' : ['<Alt-F>'],
+'rl-delete-char' : ['<Ctrl-D>','<Del>'],
+'rl-beginning-of-line' : ['<Ctrl-A>'],
+'rl-backward-char' : ['<Ctrl-B>'],
+'completion-item-yank' : ['<Ctrl-Alt-K>'],
+'rl-end-of-line' : ['<Ctrl-E>'],
+'rl-forward-char' : ['<Ctrl-F>'],
+'rl-backward-delete-char' : ['<Backspace>'],
+'rl-kill-line' : ['<Ctrl-K>'],
+'command-history-next' : ['<Ctrl-N>'],
+'command-history-prev' : ['<Ctrl-P>'],
+'command-accept --rapid' : ['<Ctrl-Return>'],
+#'completion-item-yank --sel' : ['<Alt-W>'],
+'completion-item-focus prev-category' : ['<Ctrl-Shift-Tab>'],
+#'rl-filename-rubout' : ['<Ctrl-Shift-W>'],
+'completion-item-focus next-category' : ['<Ctrl-Tab>'],
+#'rl-unix-line-discard' : ['<Ctrl-U>'],
+#'rl-rubout " "' : ['<Ctrl-W>'],
+'rl-yank' : ['<Ctrl-W><Ctrl-W>'],
+'completion-item-focus --history next' : ['<Down>'],
+'mode-leave' : ['<Escape>','Ctrl-G'],
+'completion-item-focus next-page' : ['<PgDown>'],
+'completion-item-focus prev-page' : ['<PgUp>'],
+'command-accept' : ['<Return>'],
+'completion-item-del' : ['<Shift-Delete>'],
+'completion-item-focus prev' : ['<Shift-Tab>'],
+'completion-item-focus next' : ['<Tab>'],
+'completion-item-focus --history prev' : ['<Up>'],
+'cmd-set-text -a {url}' : ['<Ctrl-Y><Ctrl-U>'], 
+'cmd-set-text -a {url:pretty}' : ['<Ctrl-Y><Ctrl-P'], 
+'cmd-set-text -a {url:host}' : ['<Ctrl-Y><Ctrl-H>'], 
+'cmd-set-text -a {url:domain}' : ['<Ctrl-Y><Ctrl-D>'], 
+'cmd-set-text -a {url:query}' : ['<Ctrl-Y><Ctrl-Q>'], 
+'cmd-set-text -a {url:port}' : ['<Ctrl-Y><Alt-P>'], 
+'cmd-set-text -a {title}' : ['<Ctrl-Y><Ctrl+T>'], 
+'cmd-set-text -a {clipboard}' : ['<Ctrl-Y><Ctrl-Y>'], 
+'cmd-set-text -a {primary}' : ['<Alt-Y><Alt-Y>'], 
 }
 #+end_src
-***** Клавиши режима хинтов
+***** Клавиши режима хинтов+
 #+begin_src python :noweb-ref qutebrowser-config
 d_hint_mode={
-'hint all tab-bg' : ['<Ctrl-B>',''],
-'hint links' : ['<Ctrl-F>',''],
-'hint --rapid links tab-bg' : ['<Ctrl-R>',''],
-'mode-leave' : ['<Escape>',''],
-'hint-follow' : ['<Return>',''],
+#'hint all tab-bg' : ['<Ctrl-T>'],
+#'hint links' : ['<Ctrl-L>'],
+'hint --rapid links tab-bg' : ['<Ctrl-M>'],
+'mode-leave' : ['<Escape>','Ctrl-G'],
+'hint-follow' : ['<Return>'],
 }
 #+end_src
-***** Клавиши режима вставки
+***** Клавиши режима вставки+
 #+begin_src python :noweb-ref qutebrowser-config
 d_insert_mode={
-'edit-text' : ['<Ctrl-E>',''],
-'mode-leave' : ['<Escape>',''],
-'fake-key <Escape>' : ['<Shift-Escape>',''],
-'insert-text -- {primary}' : ['<Shift-Ins>',''],
-'spawn -m -u crow {primary}' : ['<Alt+Space>c','<Alt+Space>с'],
+'edit-text' : ['<Alt-E>'],
+'mode-leave' : ['<Escape>','<Ctrl-G>'],
+'fake-key <Escape>' : ['<Shift-Escape>'],
+'insert-text -- {primary}' : ['<Shift-Ins>'],
+#'spawn -m -u crow {primary}' : ['<Alt+Space>c','<Alt+Space>с'],
 }
 #+end_src
-***** Режим passhtrough
+***** Режим passhtrough+
 #+begin_src python :noweb-ref qutebrowser-config
 d_passhtrough_mode={
-'mode-leave' : ['<Shift-Escape>',''],
+'mode-leave' : ['<Shift-Escape>'],
 }
 #+end_src
-***** Режим prompt
+***** Режим prompt+
 #+begin_src python :noweb-ref qutebrowser-config
 d_prompt_mode={
-'rl-backward-word' : ['<Alt-B>',''],
-'rl-backward-kill-word' : ['<Alt-Backspace>',''],
-'rl-kill-word' : ['<Alt-D>',''],
-'rl-forward-word' : ['<Alt-F>',''],
-'prompt-yank --sel' : ['<Alt-Shift-Y>',''],
-'prompt-yank' : ['<Alt-Y>',''],
-'rl-delete-char' : ['<Ctrl-?>',''],
-'rl-beginning-of-line' : ['<Ctrl-A>',''],
-'rl-backward-char' : ['<Ctrl-B>',''],
-'rl-end-of-line' : ['<Ctrl-E>',''],
-'rl-forward-char' : ['<Ctrl-F>',''],
-'rl-backward-delete-char' : ['<Ctrl-H>',''],
-'rl-kill-line' : ['<Ctrl-K>',''],
-'prompt-open-download --pdfjs' : ['<Ctrl-P>',''],
-'rl-filename-rubout' : ['<Ctrl-Shift-W>',''],
-'rl-unix-line-discard' : ['<Ctrl-U>',''],
-'rl-rubout " "' : ['<Ctrl-W>',''],
-'prompt-open-download' : ['<Ctrl-X>',''],
-'rl-yank' : ['<Ctrl-Y>',''],
-'prompt-item-focus next' : ['<Down>',''],
-'mode-leave' : ['<Escape>',''],
-'prompt-accept' : ['<Return>',''],
-'prompt-item-focus prev' : ['<Shift-Tab>',''],
-'prompt-item-focus next' : ['<Tab>',''],
-'prompt-item-focus prev' : ['<Up>',''],
+'rl-backward-word' : ['<Alt-B>'],
+'rl-backward-kill-word' : ['<Alt-Backspace>'],
+'rl-kill-word' : ['<Alt-D>'],
+'rl-forward-word' : ['<Alt-F>'],
+#'prompt-yank --sel' : ['<Alt-Shift-Y>'],
+'prompt-yank' : ['<Ctrl-Alt-K>'],
+'rl-delete-char' : ['<Ctrl-D><Del>'],
+'rl-beginning-of-line' : ['<Ctrl-A>'],
+'rl-backward-char' : ['<Ctrl-B>'],
+'rl-end-of-line' : ['<Ctrl-E>'],
+'rl-forward-char' : ['<Ctrl-F>'],
+'rl-backward-delete-char' : ['<Backspace>'],
+'rl-kill-line' : ['<Ctrl-K>'],
+#'prompt-open-download --pdfjs' : ['<Ctrl-P>'],
+#'rl-filename-rubout' : ['<Ctrl-Shift-W>'],
+#'rl-unix-line-discard' : ['<Ctrl-U>'],
+#'rl-rubout " "' : ['<Ctrl-W>'],
+'prompt-open-download' : ['<Ctrl-O>'],
+'rl-yank' : ['<Ctrl-W><Ctrl-W>'],
+'prompt-item-focus next' : ['<Down>'],
+'mode-leave' : ['<Escape>','<Ctrl-G>'],
+'prompt-accept' : ['<Return>'],
+'prompt-item-focus prev' : ['<Shift-Tab>'],
+'prompt-item-focus next' : ['<Tab>'],
+'prompt-item-focus prev' : ['<Up>'],
 }
 #+end_src
-***** Режим yesno
+***** Режим yesno+
 #+begin_src python :noweb-ref qutebrowser-config
 d_yesno_mode={
-'prompt-yank --sel' : ['<Alt-Shift-Y>',''],
-'prompt-yank' : ['<Alt-Y>',''],
-'mode-leave' : ['<Escape>',''],
-'prompt-accept' : ['<Return>',''],
+#'prompt-yank --sel' : ['<Alt-Shift-Y>'],
+'prompt-yank' : ['<Ctrl-W><Ctrl-W>'],
+'mode-leave' : ['<Escape>','<Ctrl-G>'],
+'prompt-accept' : ['<Return>'],
 'prompt-accept --save no' : ['N'],
 'prompt-accept --save yes' : ['Y'],
 'prompt-accept no' : ['n'],
@@ -585,15 +492,14 @@ d_yesno_mode={
 ***** Мои команды
 #+begin_src python :noweb-ref qutebrowser-config
 d_spawn={
-'cmd-set-text -s :spawn' : ['!!',''],
-'spawn kitty ranger' : ['!r','!к'],
-'spawn kitty' : ['!t','!е'],
-'magnet' : ['!m','!ь'],
-'cmd-set-text -s :spawn yt-dlp  {clipboard}' : ['!y','!н'],
-'spawn chromium {url}' : ['c!','с!'],
-'cmd-set-text -s :spawn -u chataiorg "{url:host}" "{title}"' : ['!a','!ф'],
-'cmd-set-text -s :spawn -u cachetoorg "{title}"' : ['!P','!З'],
-'cmd-set-text -s :spawn pandoc --wrap=none --extract-media="/home/andrey/Загрузки/{title}" -o "/home/andrey/Загрузки/{title}.org" {url}' : ['!p','!з'],
+'cmd-set-text -s :spawn' : ['<Alt-Shift-!><Alt-Shift-!>'],
+'spawn kitty' : ['<Alt-Shift-!><Alt-T>'],
+'magnet' : ['<Alt-Shift-!><Alt-M>'],
+'cmd-set-text -s :spawn yt-dlp  {clipboard}' : ['<Alt-Shift-!><Alt-Y>'],
+'spawn firefox {url}' : ['<Alt-Shift-!><Alt-F>'],
+'cmd-set-text -s :spawn -u chataiorg "{url:host}" "{title}"' : ['<Alt-Shift-!><Alt-A>'],
+'cmd-set-text -s :spawn -u cachetoorg "{title}"' : ['<Alt-Shift-!><Ctrl-P>'],
+'cmd-set-text -s :spawn pandoc --wrap=none --extract-media="/home/andrey/Загрузки/{title}" -o "/home/andrey/Загрузки/{title}.org" {url}' : ['<Alt-Shift-!><Alt-P>'],
 }
 
 d_my_other={
@@ -606,19 +512,19 @@ d_my_other={
 #+begin_src python :noweb-ref qutebrowser-config
 d_other={
 'repeat-command' : ['.','ю'],
-'cmd-set-text /' : ['/',''],
-'cmd-set-text :' : [':','Ж'],
-'print' : ['<Ctrl-Alt-p>',''],
-'quit' : ['<Ctrl-Q>',''],
-'selection-follow' : ['<Ctrl-Return>',''],
-'nop' : ['<Ctrl-Shift-Tab>',''],
-'mode-enter passthrough' : ['<Ctrl-V>',''],
-'stop' : ['<Ctrl-s>',''],
-'clear-keychain ;; search ;; fullscreen --leave' : ['<Escape>',''],
-#'fullscreen' : ['<F11>',''],
-'selection-follow -t' : ['<Return>',''],
-'cmd-set-text ?' : ['?',''],
-'macro-run' : ['@',''],
+'cmd-set-text /' : ['/'],
+'cmd-set-text :' : ['<Alt-X>'],
+#'print' : ['<Ctrl-Alt-p>'],
+'quit' : ['<Ctrl-Q>'],
+'selection-follow' : ['<Ctrl-Return>'],
+'nop' : ['<Ctrl-Shift-Tab>'],
+'mode-enter passthrough' : ['<Ctrl-V>'],
+'stop' : ['<Ctrl-s>'],
+'clear-keychain ;; search ;; fullscreen --leave' : ['<Escape>'],
+#'fullscreen' : ['<F11>'],
+'selection-follow -t' : ['<Return>'],
+'cmd-set-text ?' : ['?'],
+'macro-run' : ['@'],
 'quit' : ['ZQ','ЯЙ'],
 'quit --save' : ['ЯЯ','ZZ'],
 'undo -w' : ['U','Г'],
@@ -666,45 +572,41 @@ d_bind(d_spawn,'normal')
 d_bind(d_my_other,'normal')
 
 #+end_src
-**** Загрузка автоконфигурации 
+ автоконфигурации 
 #+begin_src python :noweb-ref qutebrowser-config
 config.load_autoconfig()
 #+end_src
 *** quickmarks
 #+header: :tangle  ~/.config/qutebrowser/quickmarks_ :mkdirp yes 
 #+begin_src text 
-social facebook https://www.facebook.com
-social telegramz https://web.telegram.org/a/#-1153786240
-social whatsapp https://web.whatsapp.com/
+facebook https://www.facebook.com
+telegramz https://web.telegram.org/a/#-1153786240
+whatsapp https://web.whatsapp.com/
 chatgpt https://chat.openai.com/
-calibre http://localhost:2222/
-privat24 https://next.privat24.ua/
 google news https://news.google.com/topstories?hl=ru&gl=UA&ceid=UA:ru
 git https://github.com/AndrijSkeptyk
 nixos https://search.nixos.org/packages
 docs https://readthedocs.org/
 whois https://whois.ru/today.ua
-ai libretranslate http://localhost:5000
-search fadar https://www.faganfinder.com/
+fadar https://www.faganfinder.com/
 doc  bcachefs https://bcachefs.org/
-ai poe https://poe.com/
+poe https://poe.com/
 tur1 https://turkishtv.co/934-rannyaya-ptashka-erkenci-kus-vse-serii-na-russkom-yazyke-tureckiy-serial-smotret-onlayn.html
-ai git docker farfalle https://github.com/rashadphz/farfalle
-google blogger https://draft.blogger.com/blog/posts/1207372942119176135
-ai image erase https://huggingface.co/spaces/finegrain/finegrain-object-eraser
-book lg https://libgen.is/
 tur2 https://turoktv.com/2937-a59-zimorodok-seria-1.html
-torrent rutracker net https://rutracker.net
-torrent rutracker org https://rutracker.net
-ai whisher large https://huggingface.co/spaces/hf-audio/whisper-large-v3-turbo
-ai whisher jax https://huggingface.co/spaces/sanchit-gandhi/whisper-jax#:~:text=whisper-jax.%20like%202.25k.%20Running%20App%20Files%20Files%20Community%20126%20Refreshing.
-agent ai https://github-com.translate.goog/mikekelly/AgentK?_x_tr_sl=auto&_x_tr_tl=ru&_x_tr_hl=uk&_x_tr_pto=wapp
-ai image background https://huggingface.co/spaces/innova-ai/video-background-removal
+ai git docker farfalle https://github.com/rashadphz/farfalle
+blogger https://draft.blogger.com/blog/posts/1207372942119176135
+imageerase https://huggingface.co/spaces/finegrain/finegrain-object-eraser
+imagebackground https://huggingface.co/spaces/innova-ai/video-background-removal
+libgen https://libgen.is/
+rutrackernet https://rutracker.net
+rutrackerorg https://rutracker.net
+whisher large https://huggingface.co/spaces/hf-audio/whisper-large-v3-turbo
+whisher jax https://huggingface.co/spaces/sanchit-gandhi/whisper-jax#:~:text=whisper-jax.%20like%202.25k.%20Running%20App%20Files%20Files%20Community%20126%20Refreshing.
 matecat https://www.matecat.com/
-ai chat gemimy https://gemini.google.com/app/937aa3ab7add86b6?hl=en-IN
-ai translator quillbot https://quillbot.com/translate?_x_tr_hist=true
-ai translator reverso https://www.reverso.net/text-translation
-xsxai translator mashine translate https://www.machinetranslation.com/
+gemimy https://gemini.google.com/app/937aa3ab7add86b6?hl=en-IN
+translaror1 https://quillbot.com/translate?_x_tr_hist=true
+translator2 reverso https://www.reverso.net/text-translation
+translator3 mashine translate https://www.machinetranslation.com/
 #+end_src
 *** bookmarks
 #+header: :tangle  ~/.config/qutebrowser/bookmarks/urls_ :mkdirp yes 
@@ -743,19 +645,6 @@ https://chat.deepseek.com/ DeepSeek - Into the Unknown
 https://chat.mistral.ai/chat Le Chat 
 https://chat.openai.com/chat chatgpt 
 https://chatgpt.com/?model=auto ChatGPT 
-https://chrome.google.com/webstore/detail/ai-magic/hgkbegmgjejijhaiejdpbailckimgoml?hl=ru AI Magic - Интернет-магазин Chrome 
-https://chrome.google.com/webstore/detail/anypicker-ai-powered-no-c/bjkpgfhekfmdffdphnniobddhkjlmmlj AnyPicker - A.I. powered No Code Web Scraper - Веб-магазин Chrome 
-https://chrome.google.com/webstore/detail/chatgpt%2B-extension/lcjlkpoehobahpaplcodgobedmghcehd?hl=ru ChatGPT+ Extension - Интернет-магазин Chrome 
-https://chrome.google.com/webstore/detail/chatgpt-executor/ddfiefcjflpdpanadjmgpogkfnjaifod?hl=ru ChatGPT Executor - Интернет-магазин Chrome 
-https://chrome.google.com/webstore/detail/chatgpt-for-google/jgjaeacdkonaoafenlfkkkmbaopkbilf ChatGPT for Google - Веб-магазин Chrome 
-https://chrome.google.com/webstore/detail/glarity-youtube-summary-w/gahhfadhfnnkkhidinaccpplledoijpd?hl=ru Glarity - YouTube summary with chatGPT - Интернет-магазин Chrome 
-https://chrome.google.com/webstore/detail/grammarly-grammar-checker/kbfnbcaeplbcioakkpcpgfkobkghlhen Grammarly: Grammar Checker and Writing App - Веб-магазин Chrome 
-https://chrome.google.com/webstore/detail/liner-chatgpt-google-assi/bmhcbmnbenmcecpmpepghooflbehcack LINER: ChatGPT Google Assistant & Highlighter - Веб-магазин Chrome 
-https://chrome.google.com/webstore/detail/magical-chatgpt-ai-writer/iibninhmiggehlcdolcilmhacighjamp Magical: ChatGPT AI Writer & Text Expander - Веб-магазин Chrome 
-https://chrome.google.com/webstore/detail/merlin-chatgpt-plus-app-o/camppjleccjaphfdbohjdohecfnoikec Merlin - chatgpt Plus app on all websites - Веб-магазин Chrome 
-https://chrome.google.com/webstore/detail/promptheus-converse-with/eipjdkbchadnamipponehljdnflolfki?hl=en-GB Promptheus - Converse with ChatGPT - Chrome Web Store 
-https://chrome.google.com/webstore/detail/writingmateai-1-chatgptgp/iihamopomflffiecicbgelncanmfionp WritingMate: #1 ChatGPT/GPT помічник - Веб-магазин Chrome 
-https://chrome.google.com/webstore/detail/youtube-summary-with-chat/nmmicjeknamkfloonkhhcjmomieiodli YouTube Summary with ChatGPT - Веб-магазин Chrome 
 http://citforum.ru/internet/search/meta_poisk/ http://citforum.ru/internet/search/meta_poisk/ 
 https://citizenevidence.amnestyusa.org/ Extract Meta Data 
 http://ckopo.net/ Ckopo.net | Скачать торрент | Скачать торрент без регистрации | торренты без регистрации | скачать торрент бесплатно | торрент без рейтинга | Игры | Фильмы | Музыку | Программы 
@@ -781,13 +670,9 @@ https://dmsu.gov.ua/services/docstate.html Перевірка стану офо�
 https://docs.anaconda.com/anaconda/user-guide/?utm_source=anaconda.com&utm_medium=individual-get-started User guide — Anaconda documentation 
 https://docs.flatpak.org/ru/latest/introduction.html Введение в Flatpak - документация Flatpak 
 https://docs.midjourney.com/docs/quick-start Midjourney Quick Start Guide 
-https://docs.tagspaces.org/browsing-files Perspectives | TagSpaces Docs 
-https://docs.tagspaces.org/selfhosting/ Self Hosting TagSpaces | TagSpaces Docs 
 https://draft.blogger.com/blogger.g?blogID=1207372942119176135#basicsettings нотатки 
 http://electrichp.blogspot.com/2013/05/chromechromium.html Записки любителя Linux Mint: Немного о настройках Chrome/Chromium 
 https://en.wikipedia.org/wiki/DeepDotWeb DeepDotWeb - Wikipedia 
-https://esozoe.azurewebsites.net/consumers/15171/balance Розрахунки за електроенергію | EnergySuite.Online 
-https://evgeny-nadymov.github.io/telegram-react/ telegram react 
 http://ex-fs.net/year/2016/page/2/ Фильмы 2016 года смотреть онлайн бесплатно в хорошем HD 720p качестве 
 http://exifdata.com/ EXIF Data Viewer 
 https://fakty.com.ua/ru/lifestyle/20170206-top-5-poshukovykiv-yaki-krashhe-zvychnyh/ Топ-5 поисковиков, которые лучше привычных | Факты ICTV 
@@ -880,22 +765,13 @@ https://habr.com/ru/post/129343/ Учимся писать userscript'ы / Ха�
 https://habr.com/ru/post/351372/ FFMPEG. Загружаем часть видео с YouTube / Хабр 
 https://habr.com/ru/post/427875/ Справочная: “Архив Интернета” — история создания, миссия и дочерние проекты / Хабр 
 https://habr.com/ru/post/435876/ Детальная настройка браузера Firefox / Хабр 
-https://habr.com/ru/post/437618/ 42 оператора расширенного поиска Google (полный список) / Хабр 
 https://habr.com/ru/post/506356/ Защищённые прокси — практичная альтернатива VPN / Хабр 
-https://habr.com/ru/post/507558/ Прощай, Google! 15 Альтернативных поисковиков, которые не шпионят, а сажают деревья и раздают воду / Хабр 
 https://habr.com/ru/post/516104/ Парсим любой сайт за считанные секунды. Как достать нужную информацию с сайта используя Selenium, XPath и Proxy Sever / Хабр 
 https://habr.com/ru/post/60977/ Синтез русской речи в Linux / Хабр 
 https://habr.com/ru/sandbox/19972/ Proxy Auto Configuration (PAC) / Песочница / Хабр 
 http://health.zp.ua/ Департамент охорони здоров'я Запорізької міської ради — ДЕПАРТАМЕНТ ОХОРОНИ ЗДОРОВ'Я Запорізької міської ради 
-http://help.ads.microsoft.com/#apex/bing/ru/10001/-1 Ключевые слова для расширенного поиска 
-http://help.ads.microsoft.com/#apex/bing/ru/10002/-1 Дополнительные параметры поиска 
 https://help.duckduckgo.com/duckduckgo-help-pages/results/syntax/ DuckDuckGo Search Syntax | DuckDuckGo Help Pages 
-https://help.gnome.org/users/ GNOME Library - Пользователям 
-https://help.qwant.com/help/qwant-search/searching/how-use-qwick/ How to use Qwick search shortcuts? - Qwant Help Center 
-https://helpdeskgeek.com/free-tools-review/6-privacy-search-engines-to-browse-the-web-safely/ 6 Privacy Search Engines to Browse the Web Safely 
 https://helsi.me/ HELSI - інформаційна система для пацієнтів 
-http://hrazvedka.ru/category/poisk_soft Софт и сервисы для профессионального поиска | hrazvedka 
-https://hss3uro2hsxfogfq.onion.to/ not Evil - Search Tor 
 https://hub.docker.com/ dockerhub 
 https://hub.docker.com/r/jiris97/calibre-gui jiris97/calibre-gui - Docker Image | Docker Hub 
 https://huggingface.co/spaces/huggingface-projects/diffuse-the-rest Diffuse The Rest — пространство для обнимающего лица от Huggingface-projects 
@@ -904,14 +780,9 @@ https://huggingface.co/spaces/stabilityai/stable-diffusion Stable Diffusion 2-1 
 https://huggingface.co/succinctly/text2image-prompt-generator?text=face%20of%20skeptyk%20inspect%20postmodernism succinctly/text2image-prompt-generator · Hugging Face 
 https://ichip.ru/obzory/programmy-i-prilozheniya/ishhem-alternativu-google-i-yandeksu-test-7-poiskovikov-300152 Ищем альтернативу Google и Яндексу: тест 7 поисковиков 
 https://ichip.ru/sovety/poiskoviki-bez-zapretov-tri-maloizvestnykh-poiskovykh-sistemy-v-sravnenii-230482 Поисковики без запретов: три малоизвестных поисковых системы в сравнении 
-https://ilyapronin.ru/prodvizhenie/operatory-poiskovykh-sistem.html Все операторы поиска Яндекс и Google, включая секретные. 
-http://imageedited.com/ Image Edited? 
 https://imi.org.ua/monitoring-types/doslidzhennya-profesijnyh-standartiv/ Дослідження професійних стандартів – IMI 
 https://incentre.zp.ua/category/statti/ Статті - Запорізький центр розслідувань 
 https://interface31.ru/tech_it/2016/05/wpad-ili-avtomaticheskaya-nastroyka-parametrov-proksi.html WPAD или автоматическая настройка параметров прокси - Записки IT специалиста 
-https://itnan.ru/post.php?c=1&p=437618 42 оператора расширенного поиска Google (полный список) 
-https://itsfoss.com/foliate-ebook-viewer/ Foliate: современное приложение для чтения электронных книг для Linux 
-https://itsfoss.com/privacy-search-engines/ 11 лучших поисковых систем, ориентированных на конфиденциальность, для Google в 2020 году 
 https://jan.ai/ Jan: Open source ChatGPT-alternative that runs 100% offline - Jan 
 https://jan.ai/docs Jan - Jan 
 https://jan.ai/docs/quickstart QuickStart - Jan 
@@ -923,102 +794,33 @@ https://lexica.art/ Lexica
 https://libgen.gs/index.php?req= Library Genesis 
 http://libgen.io/ Library Genesis 
 http://libgen.rs/search.php Library Genesis1 
-https://lifehacker.ru/200-free-services/ 200 бесплатных сервисов на все случаи жизни - Лайфхакер 
-https://lifehacker.ru/google-alternatives/ 8 поисковиков, которые лучше, чем Google - Лайфхакер 
-https://livepage.pro/knowledge-base/google-yandex-search-operators.html Операторы поисковых систем Google и Яндекс [инструкция с примерами] 
-http://localhost:2222/#library_id=config&panel=book_list calibreserver 
 http://localhost:631/admin Администрирование - CUPS 2.2.8 
 http://localhost:631/printers/HP_Deskjet_2050_J510_series HP_Deskjet_2050_J510_series - CUPS 2.2.12 
-http://localhost:8888/ SearXNG 
-http://localhost:8888/lab/workspaces/auto-z jupyterlab 
-http://localhost:8899/ Trilium 
-https://lucidor.org/lucidor/tour.php Lucidor - E-book Reader: Tour 
 https://mail.google.com/mail/u/0/?tab=km#inbox Gmail 
 https://mail.ukr.net/desktop#msglist/f0/p0 Вхідні • anvaryl@ukr.net 
-https://manjaro.org/ Homepage 
-https://manjaro.org/get-manjaro/ Manjaro Downloads 
-https://manjaro.org/support/userguide/ Manjaro - User Guide 
-https://marketer.ua/search-engine-stat-2018/ Поисковые системы Мира, рейтинг ТОП-20 лучших поисковых систем 2018 
-http://medscience.kz/research-environment/scientific-information-resources/базы-данных-и-поисковые-системы-по-мед/ Базы данных научной информации и поисковые системы (медицинские) — MEDScience.kz 
 http://mega-torrents.com/ Большая коллекция торрентов - Мега Торрент Трекер! 
 http://megatorrents.kg/details.php?id=49333 Скачать торрент Генератор обновлений для ESET 4.0 v. 1.9.11.3 / 2010 / Rus / Win :: Безрейтинговый Bit-Torrent Tracker MegaTorrentS.KG 
-https://mendeleevmarket.com/himreaktivy/spirty/jetanol/jetilovij-spirt-teh.html Этиловый спирт технический купить Украина, этанол купить 
-https://metager.org/ MetaGer: Privacy Protected Search & Find 
 http://mincult.kmu.gov.ua/control Міністерство культури України 
 https://mtproekt.uaprom.net/ua/ \ООО Спецпромпостач\ - контакти, товари, послуги, ціни 
 https://my-hit.org/serial/ Сериалы онлайн 
 http://my-tfile.org/ my-tfile.org - быстрый торрент-трекер (ex my-tfile.org). Скачать torrent фильмы, торент игры, музыку, бесплатно и без регистрации. 
 https://myanimelist.net/anime/5551/Shirouto_Kurabu/video Watch Shirouto Kurabu - MyAnimeList.net 
 http://n-torrents.ru/ Торренты без регистрации - Открытый каталог торрентов! 
-http://newserials.tv/tag/filmy-2017-goda.php Показать содержимое по тегу: Фильмы 2017 года Смотреть онлайн или cкачать торрент бесплатно 
-https://next.privat24.ua/ Ваш живий Інтернет-Банк 
 https://nib.gov.ua/uk/ Національне інформаційне бюро 
-https://nyxt.atlas.engineer/ Nyxt browser: The hacker's browser 
-https://nyxt.atlas.engineer/articles/feature Nyxt browser: Articles 
 https://nz.ua/ru https://nz.ua/ru 
-https://ok.zpep.com.ua/accounts Облэнерго 
-https://onedev.net/post/244 TTS движки для Ubuntu Linux (Text-to-Speak) 
-https://osdn.net/projects/manjaro/ Manjaro Linux Project Top Page - OSDN 
-https://paperswithcode.com/dataset/cifar-10 CIFAR-10 Dataset | Papers With Code 
-https://poe.com/chat/m7og2a5j62qn1t421t Что делает sioyek - Poe 
-https://privacysavvy.com/security/safe-browsing/private-search-engines/ 12 best private search engines to use in 2021 | PrivacySavvy 
-https://products.wolframalpha.com/api Wolfram|Alpha APIs: Computational Knowledge Integration 
-https://proficomment.ru/top-10-poiskovyx-sistem-mira-i-rossii/ ТОП-10 поисковых систем мира и России в 2021 году 
-https://proprivacy.com/privacy-service/comparison/private-search-engines 5 лучших частных поисковых систем | Просматривайте анонимно [альтернативы Google] 
+ttps://products.wolframalpha.com/api Wolfram|Alpha APIs: Computational Knowledge Integration 
 https://proximacentaurib.notion.site/2b07d3195d5948c6a7e5836f9d535592?v=b5b75a67cc52483c9965cfc141f6f582 Stable Diffusion V1 Modifier Studies | Gallery View 
 https://pypi.org/search/?c=Environment%20::%20Console&c=Programming%20Language%20::%20Python&c=Topic%20::%20System%20::%20Shells&o=&q=&page=3 Search results · PyPI 
 http://rada.gov.ua/ Офіційний портал Верховної Ради України 
-https://raiseskills.ru/rejting-poiskovyh-sistem-top-10/ Рейтинг поисковых систем. ТОП-10 популярных мировых поисковиков 
-https://referr.ru/rasshirennyj-poisk-v-google-dlya-linkbildinga-podrobnoe-rukovodstvo/ 20+ самых важных операторов поисковых систем для линкбилдинга [+инфографика] 🧐 
-https://replicate.com/methexis-inc/img2prompt/examples Examples – methexis-inc/img2prompt – Replicate 
-https://replicate.com/nightmareai/real-esrgan nightmareai/real-esrgan – Run with an API on Replicate 
-https://replicate.com/stability-ai/stable-diffusion stability-ai/stable-diffusion – Run with an API on Replicate 
 https://resources.wolframcloud.com/NeuralNetRepository/ Wolfram Neural Net Repository of Neural Network Models 
 https://resources.wolframcloud.com/NeuralNetRepository/resources/GPT2-Transformer-Trained-on-WebText-Data/ GPT2 Transformer - Wolfram Neural Net Repository 
-https://restoreprivacy.com/private-search-engine/ 7 Best Private Search Engines (And Some You Should AVOID) 
-https://riptutorial.com/ru/julia-lang/example/26313/руководство Julia Language - Руководство | julia-lang Tutorial 
 https://risu.org.ua/ Релігійно-інформаційна служба України 
-https://royallib.com/search/ Результаты поиска по запросу: дженис 
 https://ru.bmstu.wiki/Scheme Scheme — Национальная библиотека им. Н. Э. Баумана 
-https://ru.qwe.wiki/wiki/List_of_search_engines Список поисковых систем - List of search engines - qwe.wiki 
 https://ru.translatoro.com/ Переводчик онлайн 
-https://ru.vivaldi.net/mojeek-interview/ Mojeek: результаты поиска не зависят от Google, Microsoft и «Яндекс» | Браузер Vivaldi 
-https://ru.wikipedia.org/wiki/Tor Tor — Википедия 
-http://russian.doingbusiness.org/ Doing Business 
-https://rutracker.org/forum/viewforum.php?f=2091&start=1400 Фильмы 2001-2005 [стр. 29] :: Кино, Видео и ТВ :: RuTracker.org 
-https://rutracker.org/forum/viewforum.php?f=2221&start=1450 Фильмы 1991-2000 [стр. 30] :: Кино, Видео и ТВ :: RuTracker.org 
-https://rutracker.org/forum/viewforum.php?f=2221&start=2150 Фильмы 1991-2000 [стр. 44] :: Кино, Видео и ТВ :: RuTracker.org 
-https://rutracker.org/forum/viewforum.php?f=842 Новинки и сериалы в стадии показа [стр. 1] :: Сериалы :: RuTracker.org 
-https://rutracker.org/forum/viewtopic.php?t=6724526 Руки вверх, или Грабители-неудачники / Адское проклятье / The Curse of Inferno (Джон Уоррен / John Warren) [1997, США, криминал, комедия, WEB-DL 1080p] DVO (НТВ+) + Sub Eng + Original Eng :: RuTracker.org 
-https://rytr.me/ Rytr - Best AI Writer, Content Generator & Writing Assistant 
-https://same.energy/search?q=jo 'jo' on Same Energy 
-https://scira.ai/ Vercel Security Checkpoint 
-http://search-world.ru/ Поисковые системы интернета 
-https://search.nixos.org/packages NixOS Search - Packages 
 https://searchisback.com/ Search is Back! 
-https://searx.github.io/searx/ searx doc 
-https://securitygladiators.com/5-best-search-engines-for-privacy/ The 5 Best Search Engines For Privacy Right Now 
-https://seranking.ru/blog/seo/operatory-poiska-google/ Операторы поиска Google (инфографика) 
-https://set-os.ru/poiskoviki-bez-tsenzuryi/ Поисковики без цензуры и ограничений. Топ лучших сайтов | Как настроить? 
-https://sguru.org/libgen-proxy/ 35 Libgen Proxy & Mirror Sites to Access Library Genesis (libgen.io) 
-https://shop.silpo.ua/offers/cina-tyzhnya?fbclid=IwAR0RNgjYFqddwBYT9vy7_YJ7ZnaiIQqsniDlxvSqVNZqT6hVAAJ1UxFQBOk Ціна тижня - онлайн доставка продуктів Сільпо 
-https://sitechecker.pro/ru/search-engines/ Поисковые системы мира [14 лучших поисковиков] 
-https://siteclinic.ru/blog/seo-instrumenty/operatory-poiska-google/ Язык запросов Google: операторы и символы для точного поиска. | SiteClinic.ru 
-https://softcatalog.info/ru/programmy/zet-9 Скачать ZET 9 (Зет) русская версия бесплатно 
 https://spending.gov.ua/edata Edata - Єдиний веб-портал використання публічних коштів 
-https://sprosi.pro/questions/7047/kak-sozdayutsya-faylyi-linux-dev-linux linux — Как создаются файлы Linux /dev? Linux? 
-https://spy-soft.net/anonimnaya-poiskovaya-sistema/ Анонимная поисковая система. Анонимный поисковик: Обзор лучших 
-https://spyserp.com/ru/blog/search-operators-google-bing Поисковые операторы Google и Bing: 14 полезных лайфхаков 
-http://stable-diffusion-guide.s3-website-us-west-2.amazonaws.com/v2/things.html stable diffusion prompt study v2 
 https://subsidii.ioc.gov.ua/ Пошук отримувачів субсидій 
 https://subsidii.mlsp.gov.ua/package Соціальні е-послуги 
-https://suma-ev.de/metager-neuentwicklung-die-suche-in-der-suche/ MetaGer-Neuentwicklung: Die Suche in der Suche 
-https://summate.it/ Summate.it — быстро резюмируйте веб-статьи 
-https://support.mozilla.org/ru/kb/customize-firefox-controls-buttons-and-toolbars?utm_source=firefox-browser&utm_medium=default-bookmarks&utm_campaign=customize Настройка Firefox 
-https://support.mozilla.org/ru/products/firefox Справка и руководства 
-http://tapochek.net/ Главная :: Tapochek.net 
-https://techarks.ru/windows/poisk/spisok-luchshih-meta-poiskovyh-sistem-v-internete/ Список лучших мета поисковых систем в интернете 
-https://techrocks.ru/2018/09/11/best-private-search-engines/ Лучшие поисковики – альтернативы для Google | Techrocks 
 https://text.ru/seo/unauthorized Антиплагиат онлайн, проверка текста на плагиат — бесплатный сервис от Text.ru 
 http://texty.org.ua/d/2018/media-ranking/ Антирейтинг новин 
 http://texty.org.ua/d/socio/ Продавці рейтингів. База псевдосоціологів | texty.org.ua 
@@ -1034,129 +836,43 @@ http://torrentom.com/ Скачать бесплатно фильмы через 
 https://torrents-club.org/ Главная :: Torrents-Club.org Крупнейший русскоязычный торрент-трекер 
 https://torrents-club.org/index.php Главная :: Torrents-Club.org Крупнейший русскоязычный торрент-трекер 
 https://trends.google.com/trends/?geo=US google trends 
-https://tridactyl.xyz/ideas/ Google Summer of Code 2020 ideas page - Tridactyl - a vim-like Firefox WebExtension 
-https://triolan.name/LP.aspx Triolan - Особистий кабінет 
 http://turkishtv.ru/index.php?do=search Поиск по сайту » TurkishTv.Ru- смотреть онлайн! 
 https://turkserial.org/ty-polyubish/ Турецкий сериал Ты полюбишь смотреть онлайн на русском языке 
-https://typeset.io/ Discover, Create, and Publish your research paper | SciSpace by Typeset 
 https://video.sibnet.ru/search.php Поиск - видео на Sibnet 
-https://video.sibnet.ru/video4608944-My_Journey_in_an_Alternate_World_Ep12_ENG_SUB/ My Journey in an Alternate World Ep12 ENG SUB - видео ролик смотреть на Video.Sibnet.Ru 
-https://voxukraine.org/longreads/ratings/index.html Україна у глобальних рейтингах 
 https://voxukraine.org/uk/ VoxUkraine 
-https://vps.ua/blog/best-private-search-engines/ Лучшие приватные поисковики вместо Google | Блог VPS.ua 
 http://vtorrents.net/tfilm/ Скачать фильмы через торрент бесплатно - кино в удобном формате 
-https://web-optimizator.com/operators-bing-google-yandex/ Операторы расширенного поиска для Google, Яндекс и Bing. Путеводитель - Site in TOP 
-https://web.archive.org/web/20070602031929/http://wp.netscape.com/eng/mozilla/2.0/relnotes/demo/proxy-live.html Proxy Client Autoconfig File Format 
-https://web.telegram.org/#/im?p=@zecontext Telegram Web 
-https://web.telegram.org/z/ telegram-z 
-https://web.telegram.org/z/#-1727795284 телеграм 
 http://webcache.googleusercontent.com/search?q=cache:https://www.niimid.ru/clinic/classical_medicine/restorative-treatment.php&strip=1&vwsrc=0 Медицинская реабилитация 
-https://wiki.archlinux.org/index.php/Desktop_environment Desktop environment - ArchWiki 
-https://wiki.archlinux.org/index.php/GNOME#Use_a_different_window_manager GNOME - ArchWiki 
-https://wiki.archlinux.org/index.php/GNOME/Tips_and_tricks#Custom_GNOME_sessions GNOME/Tips and tricks - ArchWiki 
-https://wiki.archlinux.org/index.php/GNOME/Tips_and_tricks#Custom_GNOME_sessionsmuadibygU*^a$zR(^%3E6GF=.1hFMcN%3ET 
-https://wiki.archlinux.org/index.php/LXDE_(Русский) lxde 
-https://wiki.archlinux.org/index.php/Openbox_(Русский) openbox 
-https://wiki.archlinux.org/index.php/Tor_(Русский) Tor (Русский) - ArchWiki 
-https://wiki.archlinux.org/title/Festival_(Русский) Festival (Русский) - ArchWiki 
-https://wiki.gnome.org/Projects/SessionManagement/GnomeSession#A3._Register Projects/SessionManagement/GnomeSession - GNOME Wiki! 
-https://wiki.gnome.org/Projects/Tracker/Documentation Projects/Tracker/Documentation - GNOME Wiki! 
-https://wiki.gnome.org/Projects/Tracker/WhatIsTracker Projects/Tracker/WhatIsTracker - GNOME Wiki! 
-http://wiki.manjaro.org/index.php/Main_Page Wiki 
-https://wiki.manjaro.org/index.php?title=Main_Page Manjaro Linux 
-http://www.4comps.pp.ua/2015/12/rabochij-server-besplatnyx-obnovlenij-nod32-3-xx-i-4-xx.html Рабочий сервер бесплатных обновлений NOD32 | 4COMPS™ 
-https://www.aicyclopedia.com/ AIcyclopedia | The largest AI encyclopedia 
-https://www.alldatasheet.com/ ALLDATASHEET.COM - Electronic Parts Datasheet Search 
-https://www.alldatasheet.com/view.jsp?Searchword=NE5320 NE5320 Datasheet, PDF - Alldatasheet 
-https://www.allsearch.ai/ AllSearch.ai 
-https://www.artzstudio.com/2020/05/what-are-the-best-search-engines/ 23 Alternatives To Google! What Are The Best Search Engines? 
-https://www.cia.gov/library/publications/the-world-factbook/ ЦРУ The World Factbook - Central Intelligence Agency 
-https://www.cleverism.com/40-advanced-and-alternative-search-engines/ 40 Advanced and Alternative Search Engines | Cleverism 
-https://www.cliki.net/ CLiki: the common lisp wiki 
-https://www.craiyon.com/ Craiyon, AI Image Generator 
 http://www.cvk.gov.ua/ Центральна виборча комісія.Central election commission of Ukraine 
 https://www.datasheet.ru/ Datasheet.ru - глобальный поиск даташитов 
 http://www.datasheet39.com/PDF/927403/2SC4704-datasheet.html 2SC4704 Datasheet PDF ( Pinout ) - Silicon NPN Epitaxial 
-https://www.deepwebsiteslinks.com/how-to-access-the-deep-web/ Как получить доступ к Deep Web (Dark Web) - Полное руководство 
 http://www.e-reading.club/ Большая онлайн библиотека e-Reading 
 http://www.ebooksearchengine.net/search.php?cx=partner-pub-9634067433254658:3224229354&cof=FORID:10&as_filetype=pdf&ie=UTF-8&q=?C7K@L%20:>B>@K9%20=8:>340%20%20=5%20;>?=5B%20%20:8B09&sa=Search Download Ebooks 
 https://www.elibrary.imf.org/?redirect=true IMF eLibrary: 
 http://www.etextlib.mobi/Author/LetterList?beginName=465= Авторы | Электронная библиотека eTextLib. Скачать ePub и fb2 бесплатно. 
-https://www.facebook.com/me/ Ще Скептик 
-https://www.facebook.com/profile.php?id=100085345490970 Ще-Один 
-https://www.facebook.com/stcheskeptyk/ Ще Скептик 
 http://www.fast-torrent.ru/last-tv/ Смотреть онлайн или скачать сериалы 2016-2017 новинки в хорошем качестве без регистрации на торрент трекере Fast torrent - страница 1 
-https://www.forbes.ru/ Forbes.ru | Главное о миллиардерах, бизнесе, финансах и инвестициях в России и мире 
-https://www.geocreepy.com/ Creepy by ilektrojohn 
 http://www.gigatorrent.info/ GigaTorrent.Net: Открытый торрент трекер. Скачать торрент бесплатно, без рейтинга и регистраций 
 https://www.globalinnovationindex.org/Home Global Innovation Index | Energizing the World with Innovation 
-https://www.google.com/alerts Google Оповещения: следите за всем интересным и новым в Интернете. 
-http://www.googleguide.com/advanced_operators_reference.html Google Search Operators - Google Guide 
 https://www.gp.gov.ua/ua/statinfo.html Статистична інформація про стан злочинності та результати прокурорсько-слідчої діяльності - Генеральна прокуратура України 
-https://www.heygen.com/?af_sub1=f9436370b57e4924bcb62a80d62b17a3&source_caller=sdk&pid=af_app_invites&deep_link_sub2=f9436370b57e4924bcb62a80d62b17a3&shortlink=f9mw67mi&af_channel=mobile_share&af_siteid=6711356409&c=mobile_referral&af_referrer_uid=1733695286951-4337582 AI Video Generator | #1 on G2’s 2025 Top 100 List | HeyGen 
 https://www.imf.org/external/pubs/ft/weo/2018/01/weodata/weoselgr.aspx МВФ Select Country or Country Groups 
-https://www.internet-technologies.ru/articles/top-10-poiskovyh-sistem-kotorye-ne-budut-za-vami-sledit.html Топ 10 поисковых систем, которые не будут за вами следить | Поисковые системы 
-http://www.itplanet.zp.ua/catalog#c15#0#0##3#0#25#2 ItPlanet - Купить в Запорожье компьютер, ноутбук, монитор, блок питания, видеокарту, материнскую плату, процессор Intel, AMD, Canon, Acer, ASUS, HP, принтер, МФУ 
-https://www.itplanet.zp.ua/catalog#p179276 ItPlanet - Купить в Запорожье компьютер, ноутбук, монитор, блок питания, видеокарту, материнскую плату, процессор Intel, AMD, Canon, Acer, ASUS, HP, принтер, МФУ 
-https://www.itplanet.zp.ua/catalog#p187223 ItPlanet - Купить в Запорожье компьютер, ноутбук, монитор, блок питания, видеокарту, материнскую плату, процессор Intel, AMD, Canon, Acer, ASUS, HP, принтер, МФУ 
-https://www.izito.com/?si=psj057oh4j40b4dqlggfp11o9b&vid=aecd0c65-19d2-4c60-86bc-d5713ce95cc4 iZito 
-http://www.kartoo.com/ kartoo 
-https://www.kino-teatr.ru/rating2/movie/sov/ Советские фильмы - больше 100 голосов - рейтинг зрительских симпатий 2.0 - - Кино-Театр.Ру 
 http://www.liveinternet.ru/users/ellynna/post272550451 Лучшие популярные торрент сайты (торрент-трекеры). Обсуждение на LiveInternet - Российский Сервис Онлайн-Дневников 
 https://www.lostfilm.tv/ LostFilm.TV. Лучшие сериалы. Официальный сайт Лостфильм - уникальный ресурс о зарубежных сериалах! 
-https://www.mage.space/membership Маг 🧙 | Членство 
-https://www.maximonline.ru/skills/lifehacking/_article/fb-tips/ 12 возможностей «Фейсбука», о которых почти никто не знает | MAXIM 
-https://www.metasuchmaschine.org/ zentrale Übersicht Metasuchmaschinen 
-http://www.microtron.ua/ Микротрон, купить компьютер Запорожье, купить ноутбук Запорожье, компьютеры оптом, доставка по всей Украине 
 https://www.minfin.gov.ua/news/borg/derzhavnyi-borh-ta-harantovanyi-derzhavoiu-borh Державний борг та гарантований державою борг 
-https://www.minfin.gov.ua/news/view/pokaznyky-vykonannia-biudzhetu-ukrainy--rr?category=bjudzhet&subcategory=Current%20year%20budget%20information Показники виконання бюджету України 2017/2018 р.р. 
-https://www.mozilla.org/ru/about/ О нас 
-https://www.mozilla.org/ru/contribute/ Присоединяйтесь к сообществу 
-https://www.mozilla.org/ru/firefox/central/ Начальная страница 
 https://www.nnm-club.me/ Торрент-трекер :: NNM-Club 
 http://www.nntt.org/ Нижегородский торрент трекер 
-https://www.nvidia.com/ru-ru/drivers/winxp-2k-8421/ WinXP/2k 32-bit - (84.21)|NVIDIA 
-https://www.oschadbank.ua/ua/sd Монетизація субсидій 2 | Ощадбанк 
-https://www.pclosmag.com/index.html The PCLinuxOS Magazine: The Latest 
-https://www.perplexity.ai/ Perplexity AI: Ask Anything 
-https://www.perplexity.ai/search/emacs-chem-mozhno-prosmatrivat-.51TJHA.S4m9lvPgRDMLPw emacs - чем можно просматривать epub 
 https://www.petalsearch.com/ Petal Search 
 https://www.pfu.gov.ua/category/informatsiya/potochna-diyalnist/zvity-pro-diyalnist/ Звіти про діяльність Archives - Пенсійний фонд України 
-https://www.promo-webcom.by/analytics/search-systems/ Список поисковых систем — белорусские, российские, украинские и мировые поисковые системы 
 https://www.quora.com/ Quora 
-https://www.rankred.com/advanced-alternative-search-engines/ 18 Advanced Alternative Search Engines of 2021 - RankRed 
-https://www.riffusion.com/?&prompt=classical%20italian%20tenor%20operatic%20pop&denoising=0.75&seedImageId=og_beat Riffusion 
-https://www.rookee.ru/learn/operatoryi-poiskovyix-sistem-google-i-yandeks/ Операторы поисковых систем Яндекс и Google: операторы поиска 
-https://www.scira.ai/ Scira AI 
-https://www.searchenginejournal.com/alternative-search-engines/271409/#close 17 Great Search Engines You Can Use Instead of Google 
-http://www.seoexp.com/ru/history/GigaBlast_histoty/full_article/ Поисковая система GigaBlast.com | История поисковика GigaBlast на seoexp.com 
-https://www.seonews.ru/analytics/63-search-operators-google/ Операторы поиска Google: поисковый синтаксис | Статьи SEOnews 
-https://www.shodan.io/ Shodan 
-http://www.softportal.com/get-32655-sdbf.html скачать Sdbf 4.5 - Sdbf - Sdbf - быстрый и портативный dbf-редактор с поддержкой SQL-запросов к множеству таблиц и другими полезными функциями, который не нуждается в BDE, ODBC-драйверах и NET Framework 
-https://www.summarize.tech/ summary.tech: видеорезюме на основе искусственного интеллекта 
-https://www.thewindowsclub.com/best-free-chatgpt-extensions-for-google-chrome Лучшие бесплатные расширения ChatGPT для Google Chrome 
-https://www.transparency.org/research/cpi/overview Research - CPI - Overview 
 http://www.treasury.gov.ua/main/uk/publish/category/23596;jsessionid=02B2E6D38DF2CD8BCA60AA4FB41964F5 Веб-портал Державної казначейської служби України 
 http://www.treasury.gov.ua/main/uk/publish/category/23599 Веб-портал Державної казначейської служби України 
 http://www.ukrstat.gov.ua/ Державна служба статистики України 
-https://www.usinglinux.org/x11-wm/ Linux x11-wm software 
-https://www.veed.io/pricing Pricing - VEED.IO 
-http://www.vodokanal.zp.ua/personal-cabinet КП Водоканал Запорожье 
-http://www.voxforge.org/ru Russian - voxforge.org 
-http://www.vsepoisk.ru/2009/07/blog-post_23.html Метапоисковые системы - Как найти информацию 
-https://www.w3schools.com/jsref/jsref_obj_regexp.asp JavaScript RegExp Reference 
-https://www.webmoney.ru/ WebMoney — система расчетов on-line 
-https://www.wikizero.com/en/MetaGer Wikizero - MetaGer 
 https://www.wolfram.com/resources/tools-for-AIs/ Wolfram Tools for AIs: Computational Intelligence Connections 
 https://www.wolframalpha.com/input?i=weather%20Zaporizhzhya%20last%20year weather Zaporizhzhya last year - Wolfram|Alpha 
 http://www.worldlingo.com/ru/microsoft/website_translator.html Бесплатный переводчик веб-сайтов Онлайновый переводчик веб-сайтов 
 http://www.yamllint.com/ YAMLlint - The YAML Validator 
-https://yacy.net/ Home - YaCy 
-https://you.com/search?q=who%20are%20you&tbm=youchat&cfr=chat who are you - AI Search Based Chat | AI for Search Engines 
 #+end_src
 ** cortile
 *** Файл конфигурации 
-#+begin_src toml :tangle ~/.config/home-manager/dotfiles/cortile.toml :mkdirp yes
+#+begin_src toml :tangle ~/.config/cortile/cortile.toml :mkdirp yes
        ################################################################################
        #                                                                              #
        #           https://github.com/leukipp/cortile/blob/main/config.toml           #
@@ -1417,22 +1133,19 @@ https://you.com/search?q=who%20are%20you&tbm=youchat&cfr=chat who are you - AI S
 ".config/cortile/config.toml".source=dotfiles/cortile.toml;
 #+end_src
 ** kitty
-#+header: :noweb-ref delux-home-programs
-#+begin_src nix
-kitty.enable=true;
-kitty.settings={
-font_family="Terminus";
-font_size=20;
-shell_integration="enabled";
-allow_hyperlinks="yes";
-allow_remote_control="yes";
-background="#0d0e1c";
-foreground="#ff9f80";
-enabled_layouts="splits:split_axis=horizontal";
-listen_on="unix:/tmp/kitty";
-term= "kitty";
-shell= "bash --login";  
-};
+#+header: :noweb-ref :tangle ~/.config/kitty/kitty.conf :mkdirp yes
+#+begin_src conf
+font_family Terminus
+font_size 20
+shell_integration enabled
+allow_hyperlinks yes
+allow_remote_control yes
+background #0d0e1c
+foreground #ff9f80
+enabled_layouts splits:split_axis=horizontal
+listen_on unix:/tmp/kitty
+term  kitty
+shell bash --login  
 #+end_src
 ** clifm
 #+begin_src txt :tangle ~/.config/clifm/profiles/default/preview.clifm  :mkdirp yes
@@ -4402,20 +4115,20 @@ alias reibadailty jumble
 #+begin_src bash
 #!/usr/bin/env bash
 sudo bash <<END
-mount LABEL=manjaro /mnts || exit 1
+mount LABEL=vingo /mntsys || exit 1
 mount -o compress=zstd LABEL=usbdelux /mnt || exit 1
-rsync -av --delete /mnts/Data/ /mnt/Data/
 rsync -av --delete /mnts/Documents/ /mnt/Documents/
 rsync -av --delete /mnts/Linux/ /mnt/Linux/
-rsync -av --delete /mnts/iso/ /mnt/iso/
 rsync -av --delete /mnts/Downloads/ /mnt/Downloads/
-rsync -av --delete /mnts/Music/ /mnt/Music/
-rsync -av --delete /mnts/nixhome/ /mnt/nixhome/
-rsync -av --delete /mnts/Pictures/ /mnt/Pictures/
-rsync -av --delete /mnts/Videos/ /mnt/Videos/
-rsync -av --delete /mnts/Calibre/All/ /mnt/Calibre/All/
+rsync -av --delete /home/andrey/Data/ /mnt/Data/
+rsync -av --delete /home/andrey/iso/ /mnt/iso/
+rsync -av --delete /home/andrey/Музыка/ /mnt/Music/
+#rsync -av --delete /mnts/nixhome/ /mnt/nixhome/
+rsync -av --delete /home/andrey/Изображения/ /mnt/Pictures/
+rsync -av --delete /home/andrey/Видео/ /mnt/Videos/
+rsync -av --delete /home/andrey/Calibre/ /mnt/Calibre/
 umount /mnt
-umount /mnts
+umount /mntsys
 END
 #+end_src
 Преобразование базы данных библиотеки Calibre в файл emacs org
